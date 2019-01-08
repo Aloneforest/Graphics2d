@@ -45,6 +45,9 @@
     <ClCompile Include="Graphics2d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="world2d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Graphics2d.h">
@@ -69,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="world2d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

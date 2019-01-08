@@ -12,11 +12,10 @@ Helper2d::~Helper2d()
 
 void Helper2d::paint(QPainterPtr painterPtr, QRect eventRect)
 {
-	rect = eventRect;
-	size = rect.size();
+	this->rect = eventRect;
+	this->size = rect.size();
 	this->painterPtr = painterPtr;
-
-	paint_line(rect.topLeft().x(), rect.topLeft().y(), rect.bottomRight().x(), rect.bottomRight().y()); //≤‚ ‘
+	world.step(this);
 }
 
 void Helper2d::clear()
@@ -42,18 +41,12 @@ QSize Helper2d::get_size()
 	return size;
 }
 
+QRect Helper2d::get_rect()
+{
+	return rect;
+}
+
 void Helper2d::exec(QString & str)
 {
-	if ("line" == str)
-	{
 
-	}
-	else if ("text" == str)
-	{
-
-	}
-	else
-	{
-
-	}
 }

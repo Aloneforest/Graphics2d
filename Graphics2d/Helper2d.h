@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "world2d.h"
 
 
 class Helper2d : public QObject
@@ -17,6 +18,7 @@ public:
 	void paint_text(int x, int y, const QString & str);
 
 	QSize get_size();
+	QRect get_rect();
 
 private slots:
 	void exec(QString &str);
@@ -30,5 +32,6 @@ private:
 	QPen drag{ QColor(Qt::yellow) };
 	QFont text{ "Consolas", 15, 40 };
 
+	lib2d::world2d world;
 };
 
