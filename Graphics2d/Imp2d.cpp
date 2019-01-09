@@ -2,9 +2,9 @@
 
 Imp2d::Imp2d(QWidget *parent) : QOpenGLWidget(parent)
 {
-	//auto timer = new QTimer(this);
-	//connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-	//timer->start(1000 / 60);;
+	auto timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+	timer->start(1000 / 60);;
 }
 
 Imp2d::~Imp2d()
