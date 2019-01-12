@@ -92,9 +92,9 @@ namespace lib2d
         v2 F;				    //受力
 	};
 
-	class polygon2d : public body2d
-	{
-	public:
+    class polygon2d : public body2d
+    {
+    public:
         polygon2d(uint16_t _id, double _mass, const std::vector<v2> &_vertices);
 
         double calsPolygonArea()		//计算多边形面积
@@ -204,7 +204,7 @@ namespace lib2d
         std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
         v2 boundMin, boundMax;				//外包矩阵
     };
-	
+
     class world2d
     {
     public:
@@ -232,5 +232,6 @@ namespace lib2d
         uint16_t global_id = 1;
     };
 }
+
 
 #endif
