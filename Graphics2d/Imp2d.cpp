@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "Imp2d.h"
 
 Imp2d::Imp2d(QWidget *parent) : QOpenGLWidget(parent)
@@ -12,7 +14,7 @@ Imp2d::~Imp2d()
 
 }
 
-Helper2d * Imp2d::get_helper()
+Helper2d * Imp2d::getHelper()
 {
 	return &helper;
 }
@@ -29,4 +31,22 @@ void Imp2d::paintEvent(QPaintEvent * event)
 	painterPtr->setRenderHint(QPainter::Antialiasing); //启用反走样，告诉QPainter用不同颜色强度绘制边框以减少视觉扭曲，这种扭曲一般
 	helper.paint(painterPtr, event->rect());
 	painterPtr->end();
+}
+
+void Imp2d::mousePressEvent(QMouseEvent * event)
+{
+    if (Qt::LeftButton == event->button())
+    {
+        //helper.getWorld().mouse(Helper2d::);
+    }
+}
+
+void Imp2d::mouseReleaseEvent(QMouseEvent * event)
+{
+
+}
+
+void Imp2d::mouseMoveEvent(QMouseEvent * event)
+{
+
 }

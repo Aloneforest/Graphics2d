@@ -6,7 +6,7 @@ Graphics2d::Graphics2d(QWidget *parent)
 {
 	ui.setupUi(this);
 	connect(ui.console, SIGNAL(returnPressed()), this, SLOT(execLispCommand()));
-	connect(this, SIGNAL(send_command(QString &)), ui.imp->get_helper(), SLOT(exec(QString &)));
+	connect(this, SIGNAL(send_command(QString &)), ui.imp->getHelper(), SLOT(exec(QString &)));
 }
 
 
