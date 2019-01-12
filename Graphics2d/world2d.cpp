@@ -258,11 +258,11 @@ namespace lib2d
 			{ 0, 0.05 }
 		};
 		auto p1 = makePolygon(2, vertices, { -0.05, -0.09 });
-        p1->V = v2(0.2, 0);
-        p1->angleV = 0.8;
+        //p1->V = v2(0.2, 0);
+        //p1->angleV = 0.8;
         auto p2 = makePolygon(2, vertices, { 0.05, -0.09 });
-        p2->V = v2(-0.2, 0);
-        p2->angleV = -0.8;
+        //p2->V = v2(-0.2, 0);
+        //p2->angleV = -0.8;
 	}
 
 	void world2d::world2d::setHelper(Helper2d * helper)

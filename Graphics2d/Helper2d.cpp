@@ -73,10 +73,10 @@ QPointF Helper2d::world2screen(const lib2d::v2 & v)
 	return QPointF((v.x + 1.0) * mid.width(), -v.y * mid.width() + mid.height());
 }
 
-//lib2d::v2 Helper2d::screen2world(const QPointF & pt)
-//{
-//    return lib2d::v2(pt.x() / mid.width() - 1.0, (mid.height() - pt.y() ) / mid.width());
-//}
+lib2d::v2 Helper2d::screen2world(const QPointF & pt)
+{
+    return lib2d::v2(pt.x() / mid.width() - 1.0, (mid.height() - pt.y() ) / mid.width());
+}
 
 void Helper2d::exec(QString & str)
 {

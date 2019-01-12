@@ -23,7 +23,7 @@ public:
 	QRect getRect();
 
     static QPointF world2screen(const lib2d::v2 & v);
-    //static lib2d::v2 screen2world(const QPointF & pt);
+    static lib2d::v2 screen2world(const QPointF & pt);
 
 private slots:
 	void exec(QString &str);

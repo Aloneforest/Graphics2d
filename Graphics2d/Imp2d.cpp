@@ -37,16 +37,19 @@ void Imp2d::mousePressEvent(QMouseEvent * event)
 {
     if (Qt::LeftButton == event->button())
     {
-        //helper.getWorld().mouse(Helper2d::);
+        helper.getWorld().mouse(Helper2d::screen2world(event->localPos()), true);
     }
 }
 
 void Imp2d::mouseReleaseEvent(QMouseEvent * event)
 {
-
+    if (Qt::LeftButton == event->button())
+    {
+        helper.getWorld().mouse(Helper2d::screen2world(event->localPos()), false);
+    }
 }
 
 void Imp2d::mouseMoveEvent(QMouseEvent * event)
 {
-
+    helper.getWorld().motion(Helper2d::screen2world(event->localPos()));
 }

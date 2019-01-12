@@ -74,8 +74,8 @@ namespace lib2d
 		body2d(const body2d &) = delete;				//½ûÖ¹¿½±´
 		body2d &operator= (const body2d &) = delete;	//½ûÖ¹¸³Öµ
 
-        virtual void drag(const v2 &pt, const v2 & offset) = 0;
-        virtual bool contains(const v2 & pt) = 0;
+        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //¼ÆËãËÙ¶È
+        virtual bool contains(const v2 & pt) = 0;                   //¼ÆËãÅö×²
 
 		virtual void update(int) = 0;
 		virtual void draw(Helper2d * help2d) = 0;
@@ -218,6 +218,58 @@ namespace lib2d
 		void clear();
 		void init();
 
+        body2d * findBody(const v2 & pos)
+        {
+            auto body = std::find_if(bodies.begin(), bodies.end(), [&](auto & b)
+            {
+                return b->contains(pos);
+            });
+            if (body != bodies.end())
+            {
+                return (*body).get();
+            }
+            return nullptr;
+        }
+
+        void offset(const v2 & pt, const v2 & offset)
+        {
+            auto body = findBody(pt);
+            if (body)
+            {
+                body->drag(pt, offset);
+            }
+
+        }
+
+        void mouse(const v2 & pt, bool down)
+        {
+            if (true == down)
+            {
+                mouse_drag = true;
+                global_drag_offset.x = 0;
+                global_drag_offset.y = 0;
+            }
+            else
+            {
+                mouse_drag = false;
+                global_drag_offset.x = (pt.x - global_drag_offset.x);
+                global_drag_offset.y = (pt.y - global_drag_offset.y);
+                offset(global_drag, global_drag_offset);
+                global_drag.x = pt.x;
+                global_drag.y = pt.y;
+            }
+        }
+
+        void motion(const v2 & pt)
+        {
+            if (mouse_drag)
+            {
+                global_drag_offset.x = (pt.x - global_drag_offset.x);
+                global_drag_offset.y = (pt.x - global_drag_offset.y);
+            }
+        }
+
+
 		void setHelper(Helper2d * helper);
 
 	public:
@@ -228,8 +280,13 @@ namespace lib2d
 	private:
 		Helper2d * helper;
 
+        bool mouse_drag{ false };
+        v2 global_drag;
+        v2 global_drag_offset;
+
 		std::vector<body2d::ptr> bodies;
-		uint16_t global_id = 1;
+        uint16_t global_id = 1;
+
 	};
 }
 
