@@ -257,7 +257,7 @@ namespace lib2d
 			{ 0.05, 0 },
 			{ 0, 0.05 }
 		};
-        auto p1 = makePolygon(2, vertices, { -0.05, -0.09 });
+		auto p1 = makePolygon(2, vertices, { -0.05, -0.09 });
         p1->V = v2(0.2, 0);
         p1->angleV = 0.8;
         auto p2 = makePolygon(2, vertices, { 0.05, -0.09 });
