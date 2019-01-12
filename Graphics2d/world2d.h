@@ -65,20 +65,20 @@ namespace lib2d
         m2 inv() const;							//行列式求逆
     };
 
-	class body2d
-	{
-	public:
-		using ptr = std::shared_ptr<body2d>;
+    class body2d
+    {
+    public:
+        using ptr = std::shared_ptr<body2d>;
 
-		body2d(uint16_t _id, double _mass) : id(_id), mass(_mass){}
-		body2d(const body2d &) = delete;				//禁止拷贝
-		body2d &operator= (const body2d &) = delete;	//禁止赋值
+        body2d(uint16_t _id, double _mass) : id(_id), mass(_mass) {}
+        body2d(const body2d &) = delete;				//禁止拷贝
+        body2d &operator= (const body2d &) = delete;	//禁止赋值
 
         virtual void drag(const v2 &pt, const v2 & offset) = 0;
         virtual bool contains(const v2 & pt) = 0;
 
-		virtual void update(int) = 0;
-		virtual void draw(Helper2d * help2d) = 0;
+        virtual void update(int) = 0;
+        virtual void draw(Helper2d * help2d) = 0;
 
         uint16_t id{ 0 };	    //ID
         double mass{ 0 };	    //质量
@@ -90,7 +90,7 @@ namespace lib2d
         double inertia{ 0 };    //转动惯量
         m2 R;				    //旋转矩阵
         v2 F;				    //受力
-	};
+    };
 
     class polygon2d : public body2d
     {
@@ -232,6 +232,5 @@ namespace lib2d
         uint16_t global_id = 1;
     };
 }
-
 
 #endif
