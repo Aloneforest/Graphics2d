@@ -25,3 +25,5 @@
 #include <stack>  
 #include <set>  
 #include <bitset>
+
+typedef std::shared_ptr<QPainter> QPainterPtr;
