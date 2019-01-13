@@ -71,10 +71,10 @@ namespace lib2d
 		using ptr = std::shared_ptr<body2d>;
 
 		body2d(uint16_t _id, double _mass) : id(_id), mass(_mass) {}
-		body2d(const body2d &) = delete;				//禁止拷贝
-		body2d &operator= (const body2d &) = delete;	//禁止赋值
+		body2d(const body2d &) = delete;				            //禁止拷贝
+		body2d &operator= (const body2d &) = delete;	            //禁止赋值
 
-        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //计算速度
+        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体
         virtual bool contains(const v2 & pt) = 0;                   //计算碰撞
 
 		virtual void update(int) = 0;
@@ -82,7 +82,7 @@ namespace lib2d
 
 		uint16_t id{ 0 };	    //ID
 		double mass{ 0 };	    //质量
-		v2 pos;				    //位置
+		v2 pos;				    //世界坐标
 		v2 center;			    //重心
 		v2 V;				    //速度
         double angle{ 0 };	    //角度
@@ -186,13 +186,13 @@ namespace lib2d
 
         bool contains(const v2 & pt) override
         {
-            return true;
+            return containsInBound(pt) && containsInPolygon(pt);    //先判断是否在外包框内，再判断是否在多边形内
         }
 
         void drag(const v2 & pt, const v2 & offset) override
         {
-            V += 1.0 / mass * offset;
-            angleV += 1.0 / inertia * (pt - pos - center).cross(offset);
+            V += 1.0 / mass * offset;                                       //速度 += 力矩 / 质量
+            angleV += 1.0 / inertia * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 /角速度
         }
 
 		void init();
@@ -241,7 +241,7 @@ namespace lib2d
 
         }
 
-        void mouse(const v2 & pt, bool down)
+        void mouse(const v2 & pt, bool down)        //鼠标坐标捕获
         {
             if (true == down)
             {
@@ -260,7 +260,7 @@ namespace lib2d
             }
         }
 
-        void motion(const v2 & pt)
+        void motion(const v2 & pt)                  //鼠标移动矢量
         {
             if (mouse_drag)
             {

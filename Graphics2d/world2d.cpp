@@ -62,12 +62,12 @@ namespace lib2d
 		return{ d * v.x, d * v.y };
 	}
 
-	double v2::cross(const v2 &v) const
+	double v2::cross(const v2 &v) const     //²æ³Ë
 	{
 		return x * v.y - y * v.x;
 	}
 
-	double v2::dot(const v2 &v) const
+	double v2::dot(const v2 &v) const       //µã³Ë
 	{
 		return x * v.x + y * v.y;
 	}

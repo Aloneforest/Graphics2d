@@ -33,7 +33,7 @@ void Imp2d::paintEvent(QPaintEvent * event)
 	painter.end();
 }
 
-void Imp2d::mousePressEvent(QMouseEvent * event)
+void Imp2d::mousePressEvent(QMouseEvent * event)        //鼠标点击事件
 {
     if (Qt::LeftButton == event->button())
     {
@@ -41,7 +41,7 @@ void Imp2d::mousePressEvent(QMouseEvent * event)
     }
 }
 
-void Imp2d::mouseReleaseEvent(QMouseEvent * event)
+void Imp2d::mouseReleaseEvent(QMouseEvent * event)      //鼠标释放事件
 {
     if (Qt::LeftButton == event->button())
     {
@@ -49,7 +49,7 @@ void Imp2d::mouseReleaseEvent(QMouseEvent * event)
     }
 }
 
-void Imp2d::mouseMoveEvent(QMouseEvent * event)
+void Imp2d::mouseMoveEvent(QMouseEvent * event)         //鼠标移动事件
 {
     helper.getWorld().motion(Helper2d::screen2world(event->localPos()));
 }
