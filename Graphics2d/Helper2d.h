@@ -18,12 +18,12 @@ public:
 	void paintPolygon(const std::vector<lib2d::v2> &v);
 	void paintText(int x, int y, const QString & str);
 
-    lib2d::world2d getWorld();
+    lib2d::world2d & getWorld();
 	QSize getSize();
 	QRect getRect();
 
-    static QPointF world2screen(const lib2d::v2 & v);
-    static lib2d::v2 screen2world(const QPointF & pt);
+    static QPointF world2screen(const lib2d::v2 & v);       //世界坐标到屏幕坐标 
+    static lib2d::v2 screen2world(const QPointF & pt);      //屏幕坐标到世界坐标 世界坐标 [-1,1]
 
 private slots:
 	void exec(QString &str);

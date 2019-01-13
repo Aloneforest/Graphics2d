@@ -53,7 +53,7 @@ void Helper2d::paintText(int x, int y, const QString & str)
 }
 
 
-lib2d::world2d Helper2d::getWorld()
+lib2d::world2d & Helper2d::getWorld()
 {
     return world;
 }
@@ -70,12 +70,12 @@ QRect Helper2d::getRect()
 
 QPointF Helper2d::world2screen(const lib2d::v2 & v)
 {
-	return QPointF((v.x + 1.0) * mid.width(), -v.y * mid.width() + mid.height());
+	return QPointF(v.x * mid.width() + mid.width(), -v.y * mid.height() + mid.height());
 }
 
 lib2d::v2 Helper2d::screen2world(const QPointF & pt)
 {
-    return lib2d::v2(pt.x() / mid.width() - 1.0, (mid.height() - pt.y() ) / mid.width());
+    return lib2d::v2((pt.x() -  mid.width() ) / mid.width(), (mid.height() - pt.y() ) / mid.height());
 }
 
 void Helper2d::exec(QString & str)
