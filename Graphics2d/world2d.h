@@ -199,56 +199,56 @@ namespace lib2d
 
         }
 
-        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB)
+        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world)
         {
-            //double satA, satB;
-            //size_t idxA, idxB;
-            //auto id = makeId(bodyA->id, bodyB->id);
+            double satA, satB;
+            size_t idxA, idxB;
+            auto id = makeId(bodyA->id, bodyB->id);
 
-            //if (!boundCollition() || separatingAxis() || separatingAxis())
-            //{
-            //    auto prev = collisions.find(id);
-            //    if (prev != collisions.end())
-            //    {
-            //        bodyA->collNum--;
-            //        bodyB->collNum--;
-            //    }
-            //    return;
-            //}
+            if (!boundCollition() || separatingAxis() || separatingAxis())
+            {
+                auto prev = world.collisions.find(id);
+                if (prev != world.collisions.end())
+                {
+                    bodyA->collNum--;
+                    bodyB->collNum--;
+                }
+                return;
+            }
 
-            //auto prev = collisions.find(id);
-            //if (prev == collisions.end())
-            //{
-            //    collision c;
-            //    c.bodyA = bodyA;
-            //    c.bodyB = bodyB;
-            //    c.idxA = idxA;
-            //    c.idxB = idxB;
-            //    collisions.insert(std::make_pair(id, c));
-            //    bodyA->collNum++;
-            //    bodyB->collNum++;
-            //}
-            //else
-            //{
+            auto prev = world.collisions.find(id);
+            if (prev == world.collisions.end())
+            {
+                collision c;
+                c.bodyA = bodyA;
+                c.bodyB = bodyB;
+                c.idxA = idxA;
+                c.idxB = idxB;
+                world.collisions.insert(std::make_pair(id, c));
+                bodyA->collNum++;
+                bodyB->collNum++;
+            }
+            else
+            {
 
-            //}
+            }
         }
 
-        static void collisionDetection()
+        static void collisionDetection(world2d &world)
         {
-            //auto size = bodies.size();
-            //for (size_t i = 0; i < size; ++i)
-            //{
-            //    for (size_t j = 0; j < size; ++j)
-            //    {
-            //        collisionDetection(bodies[i], bodies[j]);
-            //    }
-            //    for (auto &body : static_bodies)
-            //    {
-            //        collisionDetection(bodies[i], body);
-            //    }
-            //}
-            //return;
+            auto size = world.bodies.size();
+            for (size_t i = 0; i < size; ++i)
+            {
+                for (size_t j = 0; j < size; ++j)
+                {
+                    collisionDetection(world.bodies[i], world.bodies[j], world);
+                }
+                for (auto &body : world.static_bodies)
+                {
+                    collisionDetection(world.bodies[i], body, world);
+                }
+            }
+            return;
         }
     };
 }

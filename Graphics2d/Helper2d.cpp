@@ -29,10 +29,12 @@ void Helper2d::clear()
 	painter->fillRect(rect, background);
 }
 
-void Helper2d::paintLine(int x1, int y1, int x2, int y2)
+void Helper2d::paintLine(lib2d::v2 a, lib2d::v2 b)
 {
-	painter->setPen(drag);
-	painter->drawLine(QLineF(QPointF(x1, y1), QPointF(x2, y2)));
+    painter->setPen(drag);
+    auto pointA = world2screen(a);
+    auto pointB = world2screen(b);
+	painter->drawLine(QLineF(pointA, pointB));
 }
 
 void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
@@ -45,11 +47,11 @@ void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
 	painter->drawPolygon(vp.data(), (int)vp.size());
 }
 
-void Helper2d::paintText(int x, int y, const QString & str)
+void Helper2d::paintText(lib2d::v2 v, const QString & str)
 {
 	painter->setPen(drag);
 	painter->setFont(text);
-	painter->drawText(x, y, str);
+	painter->drawText(v.x, v.y, str);
 }
 
 

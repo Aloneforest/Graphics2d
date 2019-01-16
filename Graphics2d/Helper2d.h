@@ -14,9 +14,9 @@ public:
 	void paint(QPainter * painter, QRect eventRect);
 
 	void clear();
-	void paintLine(int x1, int y1, int x2, int y2);
+	void paintLine(lib2d::v2 a, lib2d::v2 b);
 	void paintPolygon(const std::vector<lib2d::v2> &v);
-	void paintText(int x, int y, const QString & str);
+	void paintText(lib2d::v2 v, const QString & str);
 
     lib2d::world2d & getWorld();
 	QSize getSize();

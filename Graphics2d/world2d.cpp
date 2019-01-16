@@ -384,7 +384,7 @@ namespace lib2d
         if (true == mouse_drag)
         {
             auto dist = global_drag + global_drag_offset;
-            helper->paintLine(global_drag.x, global_drag.y, dist.x, dist.y);
+            helper->paintLine(global_drag, dist);
         }
 	}
 
