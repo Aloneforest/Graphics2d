@@ -194,7 +194,8 @@ namespace lib2d
 
     double polygon2d::calcPolygonInertia()
     {
-        double acc0, acc1;
+        double acc0 = 0;
+        double acc1 = 0;
         auto size = vertices.size();
         for (size_t i = 0; i < size; ++i)       //转动惯量 = m / 6 * Σ((Pn+1 x Pn)(Pn+1·Pn+1 + Pn+1·Pn + Pn·Pn))/（Σ(Pn+1 x Pn)）
         {
@@ -265,7 +266,7 @@ namespace lib2d
     void polygon2d::drag(const v2 & pt, const v2 & offset)
     {
         V += 1.0 / mass * offset;                                       //速度 += 力矩 / 质量
-        angleV += 1.0 / inertia * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 /角速度
+        angleV += 1.0 / inertia * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 / 转动惯量
     }
 
 	void polygon2d::init()
@@ -283,19 +284,40 @@ namespace lib2d
         calcPolygonBounds();
 	}
 
-	void polygon2d::update(int n)
+    void polygon2d::setStatic()
+    {
+        isStatic = true;
+    }
+
+	void polygon2d::update(const v2 gravity, int n)
 	{
-		if (n == 2)
-		{
-			pos += V * 1.0/30;
-			angle += angleV * world2d::dt;
-			R.rotate(angle);
-			for (size_t i = 0; i < vertices.size(); i++)
-			{
-				auto v = R.rotate(vertices[i] - center) + center;
-				verticesWorld[i] = pos + v;
-			}
-		}
+        switch (n)
+        {
+        case 0:
+        {
+            F = gravity * mass;     //默认受到重力
+        }
+            break;
+        case 1:
+        {
+            V += F / mass * world2d::dt;     //速度增量 = 加速度 * 时间间隔
+        }
+            break;
+        case 2:
+        {
+            pos += V * world2d::dt;
+            angle += angleV * world2d::dt;
+            R.rotate(angle);
+            for (size_t i = 0; i < vertices.size(); i++)
+            {
+                auto v = R.rotate(vertices[i] - center) + center;
+                verticesWorld[i] = pos + v;
+            }
+        }
+            break;
+        default:
+            break;
+        }
 	}
 
 	void polygon2d::draw(Helper2d * helper)
@@ -309,15 +331,23 @@ namespace lib2d
 	double world2d::dt = 1.0 / 30;
 	double world2d::dt_inv = 30;
 
-	polygon2d * world2d::makePolygon(double mass, const std::vector<v2> &vertices, const v2 &pos)
+	polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
 	{
 		auto polygon = std::make_unique<polygon2d>(global_id++, mass, pos, vertices);
 		auto obj = polygon.get();
-		bodies.push_back(std::move(polygon));
+        if (statics)
+        {
+            polygon->setStatic();
+            static_bodies.push_back(std::move(polygon));
+        }
+        else
+        {
+            bodies.push_back(std::move(polygon));
+        }
 		return obj;
 	}
 
-	polygon2d * world2d::makeRect(double mass, double w, double h, const v2 &pos)
+	polygon2d * world2d::makeRect(const double mass, double w, double h, const v2 &pos, bool statics = false)
 	{
 		w = std::abs(w);
 		h = std::abs(h);
@@ -328,7 +358,7 @@ namespace lib2d
 			{ -w / 2, -h / 2 },
 			{ w / 2, -h / 2 },
 		};
-		return makePolygon(mass, vertices, pos);
+		return makePolygon(mass, vertices, pos, statics);
 	}
 
 	void world2d::step(Helper2d * helper)
@@ -343,7 +373,7 @@ namespace lib2d
 
 		for (auto &body : bodies)
 		{
-			body->update(2);
+			body->update(gravity, 2);
 		}
 
 		for (auto &body : bodies)

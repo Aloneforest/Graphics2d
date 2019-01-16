@@ -74,12 +74,13 @@ namespace lib2d
 		body2d(const body2d &) = delete;				            //禁止拷贝
 		body2d &operator= (const body2d &) = delete;	            //禁止赋值
 
-        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体
-        virtual bool contains(const v2 & pt) = 0;                   //计算碰撞
+        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体施加力矩
+        virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
-		virtual void update(int) = 0;
-		virtual void draw(Helper2d * help2d) = 0;
+		virtual void update(const v2, int) = 0;                               //更新状态
+		virtual void draw(Helper2d * help2d) = 0;                   //画图
 
+        int collNum;            //碰撞次数
 		uint16_t id{ 0 };	    //ID
 		double mass{ 0 };	    //质量
 		v2 pos;				    //世界坐标
@@ -104,27 +105,44 @@ namespace lib2d
         bool containsInBound(const v2 & pt);		//判断点是否在多边形外包矩阵内
         bool containsInPolygon(const v2 & pt);		//判断点是否在多边形内
 
-        bool contains(const v2 & pt) override;      //判断点的包含关系
         void drag(const v2 & pt, const v2 & offset) override;
+        bool contains(const v2 & pt) override;
 
 		void init();
+        void setStatic();                 //静态物体初始化
 
-		void update(int n) override;
+		void update(const v2 gravity, int n) override;
 		void draw(Helper2d * helper) override;
 
 		std::vector<v2> vertices;			//多边形顶点（本地坐标）
 		std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
 		v2 boundMin, boundMax;				//外包矩阵
+        bool isStatic;
 	};
+
+    struct contact
+    {
+        v2 pos;
+    };
+
+    struct collision
+    {
+        std::array<contact, 2> contacts;
+        std::shared_ptr<body2d> bodyA;  //碰撞物体A
+        std::shared_ptr<body2d> bodyB;  //碰撞物体B
+        size_t idxA;
+        size_t idxB;
+    };
 
 	class world2d
 	{
+        friend class collisionCalc;
 	public:
 		world2d() = default;
 		~world2d() = default;
 
-		polygon2d * makePolygon(double mass, const std::vector<v2> &vertices, const v2 &pos);
-		polygon2d * makeRect(double mass, double w, double h, const v2 &pos);
+		polygon2d * makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
+		polygon2d * makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
 
 		void step(Helper2d * helper);
 		void clear();
@@ -142,6 +160,7 @@ namespace lib2d
 		static double dt;
 		static double dt_inv;
 
+
 	private:
 		Helper2d * helper;
 
@@ -150,9 +169,88 @@ namespace lib2d
         v2 global_drag_offset;          //鼠标移动矢量
 
 		std::vector<body2d::ptr> bodies;
+        std::vector<body2d::ptr> static_bodies;
+
+        std::unordered_map<uint32_t, collision> collisions;     //hashmap
+
         uint16_t global_id = 1;
 
+        v2 gravity{ 0, -0.2 };   //重力系数
 	};
+
+    class collisionCalc
+    {
+    public:
+        collisionCalc() = default;
+        ~collisionCalc() = default;
+
+        static uint32_t makeId(uint16_t a, uint16_t b)
+        {
+            return std::min(a, b) << 16 | std::max(a, b);
+        }
+
+        static bool separatingAxis()   //分离轴算法
+        {
+
+        }
+
+        static bool boundCollition()   //外包矩阵相交判定
+        {
+
+        }
+
+        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB)
+        {
+            //double satA, satB;
+            //size_t idxA, idxB;
+            //auto id = makeId(bodyA->id, bodyB->id);
+
+            //if (!boundCollition() || separatingAxis() || separatingAxis())
+            //{
+            //    auto prev = collisions.find(id);
+            //    if (prev != collisions.end())
+            //    {
+            //        bodyA->collNum--;
+            //        bodyB->collNum--;
+            //    }
+            //    return;
+            //}
+
+            //auto prev = collisions.find(id);
+            //if (prev == collisions.end())
+            //{
+            //    collision c;
+            //    c.bodyA = bodyA;
+            //    c.bodyB = bodyB;
+            //    c.idxA = idxA;
+            //    c.idxB = idxB;
+            //    collisions.insert(std::make_pair(id, c));
+            //    bodyA->collNum++;
+            //    bodyB->collNum++;
+            //}
+            //else
+            //{
+
+            //}
+        }
+
+        static void collisionDetection()
+        {
+            //auto size = bodies.size();
+            //for (size_t i = 0; i < size; ++i)
+            //{
+            //    for (size_t j = 0; j < size; ++j)
+            //    {
+            //        collisionDetection(bodies[i], bodies[j]);
+            //    }
+            //    for (auto &body : static_bodies)
+            //    {
+            //        collisionDetection(bodies[i], body);
+            //    }
+            //}
+            //return;
+        }
+    };
 }
 
 #endif
