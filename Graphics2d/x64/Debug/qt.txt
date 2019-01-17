@@ -1,1 +1,0 @@
-Uic'ing Graphics2d.ui...;D:\software\Qt\Qt5.8.0\5.8\msvc2015_64\bin\uic.exe;"G:\currency\c++\Graphics2d\Graphics2d\Graphics2d.ui" -o ".\GeneratedFiles\ui_Graphics2d.h"

@@ -328,13 +328,13 @@ namespace lib2d
 
 	//-------------world2d--------------------------------------
 
-	QTime world2d::last_clock = QTime::currentTime();
+	QTime world2d::lastClock = QTime::currentTime();
 	double world2d::dt = 1.0 / 30;
-	double world2d::dt_inv = 30;
+	double world2d::dtInv = 30;
 
 	polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
 	{
-		auto polygon = std::make_unique<polygon2d>(global_id++, mass, pos, vertices);
+		auto polygon = std::make_unique<polygon2d>(globalId++, mass, pos, vertices);
 		auto obj = polygon.get();
         if (statics)
         {
@@ -365,10 +365,10 @@ namespace lib2d
 	void world2d::step(Helper2d * helper)
 	{
 		auto now = QTime::currentTime();
-		dt = last_clock.msecsTo(now)*0.001;	//计算距离时间t的毫秒数，如果t早于当前时间，则为负
+		dt = lastClock.msecsTo(now)*0.001;	//计算距离时间t的毫秒数，如果t早于当前时间，则为负
 		dt = std::min(dt, 1.0 / 30);
-		dt_inv = 1.0 / dt;
-		last_clock = now;
+        dtInv = 1.0 / dt;
+		lastClock = now;
 
 		helper->clear();
 

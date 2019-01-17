@@ -77,7 +77,7 @@ namespace lib2d
         virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体施加力矩
         virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
-		virtual void update(const v2, int) = 0;                               //更新状态
+		virtual void update(const v2, int) = 0;                     //更新状态
 		virtual void draw(Helper2d * help2d) = 0;                   //画图
 
         int collNum;            //碰撞次数
@@ -109,10 +109,15 @@ namespace lib2d
         bool contains(const v2 & pt) override;
 
 		void init();
-        void setStatic();                 //静态物体初始化
+        void setStatic();                   //静态物体初始化
 
 		void update(const v2 gravity, int n) override;
 		void draw(Helper2d * helper) override;
+
+        v2 edge(size_t idx) const           //向量|idx+1, idx|
+        {
+            return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
+        }
 
 		std::vector<v2> vertices;			//多边形顶点（本地坐标）
 		std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
@@ -128,10 +133,12 @@ namespace lib2d
     struct collision
     {
         std::array<contact, 2> contacts;
-        std::shared_ptr<body2d> bodyA;  //碰撞物体A
+        std::shared_ptr<body2d> bodyA;  //碰撞物体A     弱指针？？？？？
         std::shared_ptr<body2d> bodyB;  //碰撞物体B
-        size_t idxA;
+        size_t idxA;    //出现最大间隙的边
         size_t idxB;
+        double satA;    //最大间隙长度
+        double satB;
     };
 
 	class world2d
@@ -156,9 +163,9 @@ namespace lib2d
 		void setHelper(Helper2d * helper);
 
 	public:
-		static QTime last_clock;
+		static QTime lastClock;
 		static double dt;
-		static double dt_inv;
+		static double dtInv;
 
 
 	private:
@@ -173,7 +180,7 @@ namespace lib2d
 
         std::unordered_map<uint32_t, collision> collisions;     //hashmap
 
-        uint16_t global_id = 1;
+        uint16_t globalId = 1;
 
         v2 gravity{ 0, -0.2 };   //重力系数
 	};
@@ -189,23 +196,60 @@ namespace lib2d
             return std::min(a, b) << 16 | std::max(a, b);
         }
 
-        static bool separatingAxis()   //分离轴算法
+        /**
+            遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
+        */
+        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat)   //分离轴算法
         {
+            auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
+            auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
 
+            sat = -inf;
+
+            for (size_t i = 0; i < a->vertices.size(); ++i)
+            {
+                auto va = a->verticesWorld[i];
+                auto N = a->edge(i).normal();                           //每条边的法向量
+                auto sep = inf;                                         //间隙
+                for (size_t j = 0; j < b->verticesWorld.size(); ++j)
+                {
+                    auto vb = b->verticesWorld[j];
+                    sep = std::min(sep, (vb - va).dot(N));              //向量|bodyB[j], bodyA[i]|投影向量|bodyA[i+1], bodyA[i]|的法向量上
+                }
+
+                if (sep > sat)
+                {
+                    sat = sep;
+                    idx = i;
+                }
+            }
+            return sat > 0;
         }
 
-        static bool boundCollition()   //外包矩阵相交判定
+        /**
+            若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
+        */
+        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB)   //外包矩阵相交判定
         {
-
+            auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
+            auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
+            auto centerA = (a->boundMax + a->boundMin) / 2;     //外包矩阵中心
+            auto centerB = (b->boundMax + b->boundMin) / 2;
+            auto sizeA = (a->boundMax - a->boundMin);           //外包矩阵边长
+            auto sizeB = (b->boundMax - b->boundMin);
+            return std::abs(centerB.x - centerA.x)/2 <= (sizeA.x + sizeB.x) && std::abs(centerB.y - centerA.y)/2 <= (sizeA.y + sizeB.y);
         }
 
         static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world)
         {
-            double satA, satB;
-            size_t idxA, idxB;
             auto id = makeId(bodyA->id, bodyB->id);
 
-            if (!boundCollition() || separatingAxis() || separatingAxis())
+            collision coll;
+            coll.bodyA = bodyA;
+            coll.bodyB = bodyB;
+
+            if (!boundCollition(bodyA, bodyB) 
+                || separatingAxis(bodyA, bodyB, coll.idxA, coll.satA) || separatingAxis(bodyB, bodyA, coll.idxB, coll.satB))
             {
                 auto prev = world.collisions.find(id);
                 if (prev != world.collisions.end())
@@ -219,12 +263,7 @@ namespace lib2d
             auto prev = world.collisions.find(id);
             if (prev == world.collisions.end())
             {
-                collision c;
-                c.bodyA = bodyA;
-                c.bodyB = bodyB;
-                c.idxA = idxA;
-                c.idxB = idxB;
-                world.collisions.insert(std::make_pair(id, c));
+                world.collisions.insert(std::make_pair(id, coll));
                 bodyA->collNum++;
                 bodyB->collNum++;
             }
