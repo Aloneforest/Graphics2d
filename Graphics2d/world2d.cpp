@@ -313,6 +313,7 @@ namespace lib2d
                 auto v = R.rotate(vertices[i] - center) + center;
                 verticesWorld[i] = pos + v;
             }
+            calcPolygonBounds();
         }
             break;
         default:
@@ -455,7 +456,7 @@ namespace lib2d
         if (true == mouse_drag)
         {
             global_drag_offset.x = (pt.x - global_drag.x);
-            global_drag_offset.y = (pt.x - global_drag.y);
+            global_drag_offset.y = (pt.y - global_drag.y);
         }
     }
 
