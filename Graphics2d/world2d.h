@@ -114,10 +114,7 @@ namespace lib2d
 		void update(const v2 gravity, int n) override;
 		void draw(Helper2d * helper) override;
 
-        v2 edge(size_t idx) const           //向量|idx+1, idx|
-        {
-            return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
-        }
+        v2 edge(const size_t idx) const;           //向量|idx+1, idx|
 
 		std::vector<v2> vertices;			//多边形顶点（本地坐标）
 		std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
@@ -191,104 +188,19 @@ namespace lib2d
         collisionCalc() = default;
         ~collisionCalc() = default;
 
-        static uint32_t makeId(uint16_t a, uint16_t b)
-        {
-            return std::min(a, b) << 16 | std::max(a, b);
-        }
+        static uint32_t makeId(uint16_t a, uint16_t b);
 
         /**
             遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
         */
-        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat)   //分离轴算法
-        {
-            auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
-            auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
-
-            sat = -inf;
-
-            for (size_t i = 0; i < a->vertices.size(); ++i)
-            {
-                auto va = a->verticesWorld[i];
-                auto N = a->edge(i).normal();                           //每条边的法向量
-                auto sep = inf;                                         //间隙
-                for (size_t j = 0; j < b->verticesWorld.size(); ++j)
-                {
-                    auto vb = b->verticesWorld[j];
-                    sep = std::min(sep, (vb - va).dot(N));              //向量|bodyB[j], bodyA[i]|投影向量|bodyA[i+1], bodyA[i]|的法向量上
-                }
-
-                if (sep > sat)
-                {
-                    sat = sep;
-                    idx = i;
-                }
-            }
-            return sat > 0;
-        }
+        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法
 
         /**
             若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
         */
-        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB)   //外包矩阵相交判定
-        {
-            auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
-            auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
-            auto centerA = (a->boundMax + a->boundMin) / 2;     //外包矩阵中心
-            auto centerB = (b->boundMax + b->boundMin) / 2;
-            auto sizeA = (a->boundMax - a->boundMin);           //外包矩阵边长
-            auto sizeB = (b->boundMax - b->boundMin);
-            return std::abs(centerB.x - centerA.x)/2 <= (sizeA.x + sizeB.x) && std::abs(centerB.y - centerA.y)/2 <= (sizeA.y + sizeB.y);
-        }
-
-        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world)
-        {
-            auto id = makeId(bodyA->id, bodyB->id);
-
-            collision coll;
-            coll.bodyA = bodyA;
-            coll.bodyB = bodyB;
-
-            if (!boundCollition(bodyA, bodyB) 
-                || separatingAxis(bodyA, bodyB, coll.idxA, coll.satA) || separatingAxis(bodyB, bodyA, coll.idxB, coll.satB))
-            {
-                auto prev = world.collisions.find(id);
-                if (prev != world.collisions.end())
-                {
-                    bodyA->collNum--;
-                    bodyB->collNum--;
-                }
-                return;
-            }
-
-            auto prev = world.collisions.find(id);
-            if (prev == world.collisions.end())
-            {
-                world.collisions.insert(std::make_pair(id, coll));
-                bodyA->collNum++;
-                bodyB->collNum++;
-            }
-            else
-            {
-
-            }
-        }
-
-        static void collisionDetection(world2d &world)
-        {
-            auto size = world.bodies.size();
-            for (size_t i = 0; i < size; ++i)
-            {
-                for (size_t j = 0; j < size; ++j)
-                {
-                    collisionDetection(world.bodies[i], world.bodies[j], world);
-                }
-                for (auto &body : world.static_bodies)
-                {
-                    collisionDetection(world.bodies[i], body, world);
-                }
-            }
-            return;
-        }
+        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);   //外包矩阵相交判定
+        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);
+        static void collisionDetection(world2d &world);
     };
 }
 
