@@ -116,6 +116,16 @@ namespace lib2d
 
         v2 edge(const size_t idx) const;           //向量|idx+1, idx|
 
+        //v2 & vertexx(size_t idx)
+        //{
+        //    return verticesWorld[idx % verticesWorld.size()];
+        //}
+
+        //size_t index(size_t idx) const
+        //{
+        //    return idx % verticesWorld.size();
+        //}
+
 		std::vector<v2> vertices;			//多边形顶点（本地坐标）
 		std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
 		v2 boundMin, boundMax;				//外包矩阵
@@ -124,18 +134,45 @@ namespace lib2d
 
     struct contact
     {
-        v2 pos;
+        v2 pos;                     //位置
+        v2 ra, rb;                  //重心到接触点的向量
+        double sep{ 0 };            //重叠距离
+        double massNormal{ 0 };
+        double massTangent{ 0 };
+        double bias{ 0 };
+        double pn{ 0 };             //法向冲量
+        double pt{ 0 };             //切向冲量
+        int idxA{ 0 };              //交点
+        int idxB{ 0 };
+        
+        contact (v2 _pos, size_t _index):pos(_pos), idxA(_index), idxB(_index){}
+
+        bool operator == (const contact & other) const
+        {
+            if (idxA == other.idxA && idxB == other.idxB)
+            {
+                return true;
+            }
+            return idxA == other.idxB && idxB == other.idxA;
+        }
+
+        bool operator != (const contact & other) const
+        {
+            return !(*this == other);
+        }
+
     };
 
     struct collision
     {
-        std::array<contact, 2> contacts;
-        std::shared_ptr<body2d> bodyA;  //碰撞物体A     弱指针？？？？？
-        std::shared_ptr<body2d> bodyB;  //碰撞物体B
+        std::vector<contact> contacts;
+        body2d::ptr bodyA;  //碰撞物体A     弱指针？？？？？
+        body2d::ptr bodyB;  //碰撞物体B
         size_t idxA;    //出现最大间隙的边
         size_t idxB;
         double satA;    //最大间隙长度
         double satB;
+        v2 N;           //法线
     };
 
 	class world2d
@@ -169,8 +206,8 @@ namespace lib2d
 		Helper2d * helper;
 
         bool mouse_drag{ false };       //鼠标拖动
-        v2 global_drag;                 //鼠标点击点
-        v2 global_drag_offset;          //鼠标移动矢量
+        v2 globalDrag;                 //鼠标点击点
+        v2 globalDragOffset;          //鼠标移动矢量
 
 		std::vector<body2d::ptr> bodies;
         std::vector<body2d::ptr> static_bodies;
@@ -190,15 +227,32 @@ namespace lib2d
 
         static uint32_t makeId(uint16_t a, uint16_t b);
 
-        /**
-            遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
-        */
-        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法
+        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法：遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
+        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);                             //外包矩阵相交判定：若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
+        
+        static bool solveCollition(collision & c)   //计算碰撞
+        {
+            if (c.satA < c.satB)
+            {
+                std::swap(c.bodyA, c.bodyB);
+                std::swap(c.idxA, c.idxB);
+                std::swap(c.satA, c.satB);
+            }
 
-        /**
-            若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
-        */
-        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);   //外包矩阵相交判定
+            auto bodyA = std::dynamic_pointer_cast<polygon2d>(c.bodyA);
+            auto bodyB = std::dynamic_pointer_cast<polygon2d>(c.bodyB);
+
+            c.N = bodyA->edge(c.idxA).normal();
+            //c.idxB = incidentEdge();
+
+            decltype(c.contacts) contacts;          //获取类型
+
+            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyB->verticesWorld.size()], c.idxB % bodyB->verticesWorld.size() + 1);
+            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyB->verticesWorld.size() + 1 ], c.idxB % bodyB->verticesWorld.size() + 1 + 1);
+            auto tmp = contacts;
+
+        }
+
         static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);
         static void collisionDetection(world2d &world);
     };

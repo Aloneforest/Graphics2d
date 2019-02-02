@@ -377,6 +377,8 @@ namespace lib2d
 
 		helper->clear();
 
+        collisionCalc::collisionDetection(helper->getWorld());
+
 		for (auto &body : bodies)
 		{
 			body->update(gravity, 2);
@@ -389,8 +391,8 @@ namespace lib2d
 
         if (true == mouse_drag)
         {
-            auto dist = global_drag + global_drag_offset;
-            helper->paintLine(global_drag, dist);
+            auto dist = globalDrag + globalDragOffset;
+            helper->paintLine(globalDrag, dist);
         }
 
         auto w = helper->getSize().width();
@@ -445,19 +447,19 @@ namespace lib2d
         if (true == down)
         {
             mouse_drag = true;
-            global_drag_offset.x = 0;
-            global_drag_offset.y = 0;
-            global_drag.x = pt.x;
-            global_drag.y = pt.y;
+            globalDragOffset.x = 0;
+            globalDragOffset.y = 0;
+            globalDrag.x = pt.x;
+            globalDrag.y = pt.y;
         }
         else
         {
             mouse_drag = false;
-            global_drag_offset.x = (pt.x - global_drag.x);
-            global_drag_offset.y = (pt.y - global_drag.y);
-            offset(global_drag, global_drag_offset);
-            global_drag.x = pt.x;
-            global_drag.y = pt.y;
+            globalDragOffset.x = (pt.x - globalDrag.x);
+            globalDragOffset.y = (pt.y - globalDrag.y);
+            offset(globalDrag, globalDragOffset);
+            globalDrag.x = pt.x;
+            globalDrag.y = pt.y;
         }
     }
 
@@ -465,8 +467,8 @@ namespace lib2d
     {
         if (true == mouse_drag)
         {
-            global_drag_offset.x = (pt.x - global_drag.x);
-            global_drag_offset.y = (pt.y - global_drag.y);
+            globalDragOffset.x = (pt.x - globalDrag.x);
+            globalDragOffset.y = (pt.y - globalDrag.y);
         }
     }
 
@@ -534,6 +536,7 @@ namespace lib2d
         coll.bodyA = bodyA;
         coll.bodyB = bodyB;
 
+        //快速检测
         if (!boundCollition(bodyA, bodyB)
             || separatingAxis(bodyA, bodyB, coll.idxA, coll.satA) || separatingAxis(bodyB, bodyA, coll.idxB, coll.satB))
         {
@@ -547,15 +550,15 @@ namespace lib2d
         }
 
         auto prev = world.collisions.find(id);
-        if (prev == world.collisions.end())
+        if (prev == world.collisions.end())     //新增
         {
             world.collisions.insert(std::make_pair(id, coll));
             bodyA->collNum++;
             bodyB->collNum++;
         }
-        else
+        else                                    //更新
         {
-
+            //if()
         }
     }
 
@@ -566,7 +569,10 @@ namespace lib2d
         {
             for (size_t j = 0; j < size; ++j)
             {
-                collisionDetection(world.bodies[i], world.bodies[j], world);
+                if (i < j)
+                {
+                    collisionDetection(world.bodies[i], world.bodies[j], world);
+                }
             }
             for (auto &body : world.static_bodies)
             {
