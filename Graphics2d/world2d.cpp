@@ -552,13 +552,25 @@ namespace lib2d
         auto prev = world.collisions.find(id);
         if (prev == world.collisions.end())     //新增
         {
-            world.collisions.insert(std::make_pair(id, coll));
-            bodyA->collNum++;
-            bodyB->collNum++;
+            if (solveCollition(coll))
+            {
+                world.collisions.insert(std::make_pair(id, coll));
+                bodyA->collNum++;
+                bodyB->collNum++;
+            }
         }
         else                                    //更新
         {
-            //if()
+            if (solveCollition(coll))
+            {
+
+            }
+            else
+            {
+                world.collisions.erase(prev);
+                bodyA->collNum--;
+                bodyB->collNum--;
+            }
         }
     }
 

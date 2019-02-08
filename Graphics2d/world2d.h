@@ -230,8 +230,48 @@ namespace lib2d
         static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法：遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
         static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);                             //外包矩阵相交判定：若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
         
+        static size_t incidentEdge(const v2 & N, polygon2d::ptr bodyPtr)
+        {
+            size_t idx = SIZE_MAX;
+            auto minDot = inf;
+            auto body = std::dynamic_pointer_cast<polygon2d>(bodyPtr);
+            for (size_t i = 0; i < body->verticesWorld.size(); ++i)
+            {
+                auto edgeNormal = body->edge(i).normal();   //每条边上的法向量
+                auto dot = edgeNormal.dot(N);               //投影长度
+                if (dot < minDot)                           //查找最小间隙
+                {
+                    minDot = dot;
+                    idx = i;
+                }
+            }
+            return idx;
+        }
+
+        static size_t clip(std::vector<contact> & out, const std::vector<contact> & in, size_t i, const v2 & p1, const v2 & p2)    //Sutherland-Hodgman（多边形裁剪）
+        {
+            size_t numOut = 0;
+            auto N = (p2 - p1).normal();
+            auto dist0 = N.dot(in[0].pos - p1);
+            auto dist1 = N.dot(in[1].pos - p2);
+
+            if (dist0 <= 0) out[numOut++] = in[0];
+            if (dist1 <= 0) out[numOut++] = in[1];
+
+            if (dist0 * dist1 < 0)
+            {
+                auto interp = dist0 / (dist0 - dist1);
+                out[numOut].pos = in[0].pos + interp * (in[1].pos - in[0].pos);
+                out[numOut].idxA = -(int)i - 1;
+                ++numOut;
+            }
+
+            return numOut;
+        }
+
         static bool solveCollition(collision & c)   //计算碰撞
         {
+            //间隙最小
             if (c.satA < c.satB)
             {
                 std::swap(c.bodyA, c.bodyB);
@@ -241,16 +281,46 @@ namespace lib2d
 
             auto bodyA = std::dynamic_pointer_cast<polygon2d>(c.bodyA);
             auto bodyB = std::dynamic_pointer_cast<polygon2d>(c.bodyB);
+            auto bodyASize = bodyA->verticesWorld.size();
+            auto bodyBSize = bodyB->verticesWorld.size();
 
             c.N = bodyA->edge(c.idxA).normal();
-            //c.idxB = incidentEdge();
+            c.idxB = incidentEdge(c.N, bodyB);
 
             decltype(c.contacts) contacts;          //获取类型
 
-            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyB->verticesWorld.size()], c.idxB % bodyB->verticesWorld.size() + 1);
-            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyB->verticesWorld.size() + 1 ], c.idxB % bodyB->verticesWorld.size() + 1 + 1);
+            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyBSize], c.idxB % bodyBSize + 1);
+            contacts.emplace_back(bodyB->verticesWorld[(c.idxB + 1) % bodyBSize], (c.idxB + 1) % bodyBSize + 1);
             auto tmp = contacts;
 
+            for (size_t i = 0; i < bodyA->verticesWorld.size(); ++i)
+            {
+                if (i == c.idxA)
+                {
+                    continue;
+                }
+                if (clip(tmp, contacts, i, bodyA->verticesWorld[i % bodyASize], bodyA->verticesWorld[(i + 1) % bodyASize]) < 2);
+                {
+                    return false;
+                }
+                contacts = tmp;
+            }
+
+            auto va = bodyA->verticesWorld[c.idxB % bodyBSize];
+
+            for (auto & contact : contacts)
+            {
+                auto sep = (contact.pos - va).dot(c.N);
+                if (sep <= 0)
+                {
+                    contact.sep = sep;
+                    contact.ra = contact.pos - c.bodyA->pos - c.bodyA->center;
+                    contact.rb = contact.pos - c.bodyB->pos - c.bodyB->center;
+                    c.contacts.push_back(contact);
+                }
+            }
+
+            return true;
         }
 
         static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);
