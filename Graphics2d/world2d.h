@@ -17,16 +17,16 @@ namespace lib2d
 		v2(const v2 &v) = default;
 		v2 &operator= (const v2 &v) = default;
 
-		v2 operator* (double d) const;
-		v2 operator/ (double d) const;
-		v2 operator+ (double d) const;
-		v2 operator- (double d) const;
-		v2 operator+ (const v2 &v) const;
-		v2 operator- (const v2 &v) const;
-		v2 &operator+= (const v2 &v);
-		v2 &operator-= (const v2 &v);
-		v2 operator- () const;
-		friend v2 operator* (double d, const v2 &v);
+        inline v2 operator* (double d) const;
+        inline v2 operator/ (double d) const;
+        inline v2 operator+ (double d) const;
+        inline v2 operator- (double d) const;
+        inline v2 operator+ (const v2 &v) const;
+        inline v2 operator- (const v2 &v) const;
+        inline v2 &operator+= (const v2 &v);
+        inline v2 &operator-= (const v2 &v);
+        inline v2 operator- () const;
+		friend inline v2 operator* (double d, const v2 &v);
 
 		double cross(const v2 &v) const;		// 叉乘
 		double dot(const v2 &v) const;			// 点乘
@@ -77,10 +77,12 @@ namespace lib2d
         virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体施加力矩
         virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
+        virtual void impulse(const v2 & p, const v2 & r) = 0;
+
 		virtual void update(const v2, int) = 0;                     //更新状态
 		virtual void draw(Helper2d * help2d) = 0;                   //画图
 
-        int collNum;            //碰撞次数
+        int collNum{ 0 };       //碰撞次数
 		uint16_t id{ 0 };	    //ID
 		double mass{ 0 };	    //质量
 		v2 pos;				    //世界坐标
@@ -89,8 +91,11 @@ namespace lib2d
         double angle{ 0 };	    //角度
         double angleV{ 0 };	    //角速度
         double inertia{ 0 };    //转动惯量
+        double f{ 1 };          //滑动/静摩擦系数
 		m2 R;				    //旋转矩阵
 		v2 F;				    //受力
+        v2 Fa;                  //受力（合力）
+        double M{ 0 };          //力矩
 	};
 
 	class polygon2d : public body2d
@@ -110,6 +115,8 @@ namespace lib2d
 
 		void init();
         void setStatic();                   //静态物体初始化
+
+        void impulse(const v2 & p, const v2 & r) override;
 
 		void update(const v2 gravity, int n) override;
 		void draw(Helper2d * helper) override;
@@ -132,6 +139,7 @@ namespace lib2d
         bool isStatic;
 	};
 
+    //接触点
     struct contact
     {
         v2 pos;                     //位置
@@ -163,16 +171,17 @@ namespace lib2d
 
     };
 
+    //碰撞结构
     struct collision
     {
         std::vector<contact> contacts;
         body2d::ptr bodyA;  //碰撞物体A     弱指针？？？？？
         body2d::ptr bodyB;  //碰撞物体B
-        size_t idxA;    //出现最大间隙的边
+        size_t idxA;        //出现最大间隙的边
         size_t idxB;
-        double satA;    //最大间隙长度
+        double satA;        //最大间隙长度
         double satB;
-        v2 N;           //法线
+        v2 N;               //法线
     };
 
 	class world2d
@@ -184,6 +193,11 @@ namespace lib2d
 
 		polygon2d * makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
 		polygon2d * makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
+
+        //void collisionDetection()
+        //{
+
+        //}
 
 		void step(Helper2d * helper);
 		void clear();
@@ -225,106 +239,58 @@ namespace lib2d
         collisionCalc() = default;
         ~collisionCalc() = default;
 
-        static uint32_t makeId(uint16_t a, uint16_t b);
+        static uint32_t makeId(uint16_t a, uint16_t b);     //两多边形合成ID
 
         static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法：遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
         static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);                             //外包矩阵相交判定：若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
         
-        static size_t incidentEdge(const v2 & N, polygon2d::ptr bodyPtr)
-        {
-            size_t idx = SIZE_MAX;
-            auto minDot = inf;
-            auto body = std::dynamic_pointer_cast<polygon2d>(bodyPtr);
-            for (size_t i = 0; i < body->verticesWorld.size(); ++i)
-            {
-                auto edgeNormal = body->edge(i).normal();   //每条边上的法向量
-                auto dot = edgeNormal.dot(N);               //投影长度
-                if (dot < minDot)                           //查找最小间隙
-                {
-                    minDot = dot;
-                    idx = i;
-                }
-            }
-            return idx;
-        }
-
-        static size_t clip(std::vector<contact> & out, const std::vector<contact> & in, size_t i, const v2 & p1, const v2 & p2)    //Sutherland-Hodgman（多边形裁剪）
-        {
-            size_t numOut = 0;
-            auto N = (p2 - p1).normal();
-            auto dist0 = N.dot(in[0].pos - p1);
-            auto dist1 = N.dot(in[1].pos - p2);
-
-            if (dist0 <= 0) out[numOut++] = in[0];
-            if (dist1 <= 0) out[numOut++] = in[1];
-
-            if (dist0 * dist1 < 0)
-            {
-                auto interp = dist0 / (dist0 - dist1);
-                out[numOut].pos = in[0].pos + interp * (in[1].pos - in[0].pos);
-                out[numOut].idxA = -(int)i - 1;
-                ++numOut;
-            }
-
-            return numOut;
-        }
-
-        static bool solveCollition(collision & c)   //计算碰撞
-        {
-            //间隙最小
-            if (c.satA < c.satB)
-            {
-                std::swap(c.bodyA, c.bodyB);
-                std::swap(c.idxA, c.idxB);
-                std::swap(c.satA, c.satB);
-            }
-
-            auto bodyA = std::dynamic_pointer_cast<polygon2d>(c.bodyA);
-            auto bodyB = std::dynamic_pointer_cast<polygon2d>(c.bodyB);
-            auto bodyASize = bodyA->verticesWorld.size();
-            auto bodyBSize = bodyB->verticesWorld.size();
-
-            c.N = bodyA->edge(c.idxA).normal();
-            c.idxB = incidentEdge(c.N, bodyB);
-
-            decltype(c.contacts) contacts;          //获取类型
-
-            contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyBSize], c.idxB % bodyBSize + 1);
-            contacts.emplace_back(bodyB->verticesWorld[(c.idxB + 1) % bodyBSize], (c.idxB + 1) % bodyBSize + 1);
-            auto tmp = contacts;
-
-            for (size_t i = 0; i < bodyA->verticesWorld.size(); ++i)
-            {
-                if (i == c.idxA)
-                {
-                    continue;
-                }
-                if (clip(tmp, contacts, i, bodyA->verticesWorld[i % bodyASize], bodyA->verticesWorld[(i + 1) % bodyASize]) < 2);
-                {
-                    return false;
-                }
-                contacts = tmp;
-            }
-
-            auto va = bodyA->verticesWorld[c.idxB % bodyBSize];
-
-            for (auto & contact : contacts)
-            {
-                auto sep = (contact.pos - va).dot(c.N);
-                if (sep <= 0)
-                {
-                    contact.sep = sep;
-                    contact.ra = contact.pos - c.bodyA->pos - c.bodyA->center;
-                    contact.rb = contact.pos - c.bodyB->pos - c.bodyB->center;
-                    c.contacts.push_back(contact);
-                }
-            }
-
-            return true;
-        }
+        static size_t incidentEdge(const v2 & N, polygon2d::ptr bodyPtr);                                                           //查找最小间隙索引
+        static size_t clip(std::vector<contact> & out, const std::vector<contact> & in, size_t i, const v2 & p1, const v2 & p2);    //Sutherland-Hodgman（多边形裁剪）
+        static bool solveCollition(collision & c);                                                                                  //计算碰撞
 
         static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);
         static void collisionDetection(world2d &world);
+
+        static void collisionPrepare(collision & coll)
+        {
+            static const double kBiasFactor = 0.2;
+            const auto & a = *coll.bodyA;
+            const auto & b = *coll.bodyB;
+            auto tangent = coll.N.normal();
+            for (auto & contact : coll.contacts)
+            {
+                auto nA = contact.ra.cross(coll.N);
+                auto nB = contact.rb.cross(coll.N);
+                //auto kn = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * nA * nA + std::abs(b.inertia.inv) * nB * nB
+            }
+        }
+
+        static void drawCollision(const collision & coll)
+        {
+
+        }
+
+        static void collisionUpdate(collision & coll, const collision & oldColl)
+        {
+            auto & a = *coll.bodyA;
+            auto & b = *coll.bodyB;
+
+            const auto & oldContacts = oldColl.contacts;
+            for (auto & newContact : coll.contacts)
+            {
+                auto oldContact = std::find(oldContacts.begin(), oldContacts.end(), newContact);
+                if (oldContact != oldContacts.end())                            //同一碰撞点的更新
+                {
+                    newContact.pn = oldContact->pn;
+                    newContact.pt = oldContact->pt;
+
+                    auto tangent = coll.N.normal();                             //新的切线
+                    auto p = newContact.pn * coll.N + newContact.pt * tangent;  //新的冲量
+                    a.impulse(-p, newContact.ra);                             //施加力矩
+                    b.impulse(p, newContact.rb);
+                }
+            }
+        }
     };
 }
 

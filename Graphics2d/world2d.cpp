@@ -289,6 +289,14 @@ namespace lib2d
         isStatic = true;
     }
 
+    void polygon2d::impulse(const v2 & p, const v2 & r)
+    {
+        auto _p = p * world2d::dtInv;
+        F += _p;
+        Fa += _p;
+        M += r.cross(_p);
+    }
+
 	void polygon2d::update(const v2 gravity, int n)
 	{
         switch (n)
@@ -377,7 +385,12 @@ namespace lib2d
 
 		helper->clear();
 
-        collisionCalc::collisionDetection(helper->getWorld());
+        collisionCalc::collisionDetection(helper->getWorld());  //计算碰撞
+
+        for (auto & col : collisions)
+        {
+            //collisionPrepare(col.second);
+        }
 
 		for (auto &body : bodies)
 		{
@@ -411,14 +424,14 @@ namespace lib2d
 		clear();
 		std::vector<v2> vertices =
 		{
-			{ -0.05, 0 },
-			{ 0.05, 0 },
-			{ 0, 0.05 }
+			{ -0.2, 0 },
+			{ 0.2, 0 },
+			{ 0, 0.3 }
 		};
-		auto p1 = makePolygon(2, vertices, { -0.05, -0.09 });
+		auto p1 = makePolygon(2, vertices, { -0.2, 0 });
         //p1->V = v2(0.2, 0);
         //p1->angleV = 0.8;
-        auto p2 = makePolygon(2, vertices, { 0.05, -0.09 });
+        auto p2 = makePolygon(2, vertices, { 0.2, 0 });
         //p2->V = v2(-0.2, 0);
         //p2->angleV = -0.8;
 	}
@@ -477,16 +490,13 @@ namespace lib2d
 		this->helper = helper;
 	}
 
-    //-----------------------------------------------------------------
+    //-------------collisionCalc-------------------------------------
 
     uint32_t collisionCalc::makeId(uint16_t a, uint16_t b)
     {
         return std::min(a, b) << 16 | std::max(a, b);
     }
 
-    /**
-    遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
-    */
     bool collisionCalc::separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat)   //分离轴算法
     {
         auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
@@ -502,7 +512,7 @@ namespace lib2d
             for (size_t j = 0; j < b->verticesWorld.size(); ++j)
             {
                 auto vb = b->verticesWorld[j];
-                sep = std::min(sep, (vb - va).dot(N));              //向量|bodyB[j], bodyA[i]|投影向量|bodyA[i+1], bodyA[i]|的法向量上
+                sep = std::min(sep, (vb - va).dot(N));              //向量|bodyB[j], bodyA[i]|投影到向量|bodyA[i+1], bodyA[i]|的法向量上
             }
 
             if (sep > sat)
@@ -511,12 +521,9 @@ namespace lib2d
                 idx = i;
             }
         }
-        return sat > 0;
+        return sat > 0;                                             //间隙大于0则一定没有接触，等于0可能发生碰撞
     }
 
-    /**
-    若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
-    */
     bool collisionCalc::boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB)   //外包矩阵相交判定
     {
         auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
@@ -526,6 +533,99 @@ namespace lib2d
         auto sizeA = (a->boundMax - a->boundMin);           //外包矩阵边长
         auto sizeB = (b->boundMax - b->boundMin);
         return std::abs(centerB.x - centerA.x) / 2 <= (sizeA.x + sizeB.x) && std::abs(centerB.y - centerA.y) / 2 <= (sizeA.y + sizeB.y);
+    }
+
+    size_t collisionCalc::incidentEdge(const v2 & N, polygon2d::ptr bodyPtr)
+    {
+        size_t idx = SIZE_MAX;
+        auto minDot = inf;
+        auto body = std::dynamic_pointer_cast<polygon2d>(bodyPtr);
+        for (size_t i = 0; i < body->verticesWorld.size(); ++i)
+        {
+            auto edgeNormal = body->edge(i).normal();   //向量|body[i+1], body[i]|的法向量
+            auto dot = edgeNormal.dot(N);               //向量|body[i+1], body[i]|的法向量 投影到向量 N 上
+            if (dot < minDot)                           //查找最小间隙
+            {
+                minDot = dot;
+                idx = i;
+            }
+        }
+        return idx;                                     //返回最小间隙对应边
+    }
+
+    size_t collisionCalc::clip(std::vector<contact> & out, const std::vector<contact> & in, size_t i, const v2 & p1, const v2 & p2)    //Sutherland-Hodgman（多边形裁剪）
+    {
+        size_t numOut = 0;
+        auto N = (p2 - p1).normal();
+        auto dist0 = N.dot(in[0].pos - p1);
+        auto dist1 = N.dot(in[1].pos - p2);
+
+        if (dist0 <= 0) out[numOut++] = in[0];
+        if (dist1 <= 0) out[numOut++] = in[1];
+
+        if (dist0 * dist1 < 0)
+        {
+            auto interp = dist0 / (dist0 - dist1);
+            out[numOut].pos = in[0].pos + interp * (in[1].pos - in[0].pos);
+            out[numOut].idxA = -(int)i - 1;
+            ++numOut;
+        }
+
+        return numOut;
+    }
+
+    bool collisionCalc::solveCollition(collision & c)   //计算碰撞
+    {
+        //间隙最小
+        if (c.satA < c.satB)
+        {
+            std::swap(c.bodyA, c.bodyB);
+            std::swap(c.idxA, c.idxB);
+            std::swap(c.satA, c.satB);
+        }
+
+        auto bodyA = std::dynamic_pointer_cast<polygon2d>(c.bodyA);
+        auto bodyB = std::dynamic_pointer_cast<polygon2d>(c.bodyB);
+        auto bodyASize = bodyA->verticesWorld.size();
+        auto bodyBSize = bodyB->verticesWorld.size();
+
+        c.N = bodyA->edge(c.idxA).normal();
+        c.idxB = incidentEdge(c.N, bodyB);
+
+        decltype(c.contacts) contacts;          //获取类型
+
+        contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyBSize], c.idxB % bodyBSize + 1);
+        contacts.emplace_back(bodyB->verticesWorld[(c.idxB + 1) % bodyBSize], (c.idxB + 1) % bodyBSize + 1);
+        auto tmp = contacts;
+
+        for (size_t i = 0; i < bodyA->verticesWorld.size(); ++i)
+        {
+            if (i == c.idxA)
+            {
+                continue;
+            }
+            if (clip(tmp, contacts, i, bodyA->verticesWorld[i % bodyASize], bodyA->verticesWorld[(i + 1) % bodyASize]) < 2)
+            {
+                return false;
+            }
+            contacts = tmp;
+        }
+
+        auto va = bodyA->verticesWorld[c.idxA % bodyBSize];
+
+        for (auto & contact : contacts)
+        {
+            auto sep = (contact.pos - va).dot(c.N);
+            if (sep <= 0)
+            {
+                contact.sep = sep;
+                contact.ra = contact.pos - c.bodyA->pos - c.bodyA->center;
+                contact.rb = contact.pos - c.bodyB->pos - c.bodyB->center;
+                c.contacts.push_back(contact);
+            }
+        }
+
+        return true;
     }
 
     void collisionCalc::collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world)
@@ -563,7 +663,8 @@ namespace lib2d
         {
             if (solveCollition(coll))
             {
-
+                collisionUpdate(coll, world.collisions[id]);
+                world.collisions[id] = coll;
             }
             else
             {
