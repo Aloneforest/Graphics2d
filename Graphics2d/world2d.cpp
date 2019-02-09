@@ -192,7 +192,7 @@ namespace lib2d
         return gc / 6.0 / calcPolygonArea();
     }
 
-    double polygon2d::calcPolygonInertia()
+    double polygon2d::calcPolygonInertia(double mass)
     {
         double acc0 = 0;
         double acc1 = 0;
@@ -265,13 +265,13 @@ namespace lib2d
 
     void polygon2d::drag(const v2 & pt, const v2 & offset)
     {
-        V += 1.0 / mass * offset;                                       //速度 += 力矩 / 质量
-        angleV += 1.0 / inertia * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 / 转动惯量
+        V += mass.inv * offset;                                       //速度 += 力矩 / 质量
+        angleV += inertia.inv * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 / 转动惯量
     }
 
 	void polygon2d::init()
     {
-        inertia = calcPolygonInertia();
+        inertia.set(calcPolygonInertia(mass.value));
         center = calcPolygonCentroid();
 
         R.rotate(angle);
@@ -297,18 +297,38 @@ namespace lib2d
         M += r.cross(_p);
     }
 
+    v2 polygon2d::world() const 
+    {
+        return pos + center;
+    }
+
+    body2dType polygon2d::type() const
+    {
+        return POLYGON;
+    }
+
+    v2 polygon2d::min() const
+    {
+        return boundMin;
+    }
+
+    v2 polygon2d::max() const
+    {
+        return boundMax;
+    }
+
 	void polygon2d::update(const v2 gravity, int n)
 	{
         switch (n)
         {
         case 0:
         {
-            F = gravity * mass;     //默认受到重力
+            F = gravity * mass.value;     //默认受到重力
         }
             break;
         case 1:
         {
-            V += F / mass * world2d::dt;     //速度增量 = 加速度 * 时间间隔
+            V += F * mass.inv * world2d::dt;     //速度增量 = 加速度 * 时间间隔
         }
             break;
         case 2:
@@ -402,10 +422,15 @@ namespace lib2d
 			body->draw(helper);
 		}
 
+        for (auto &coll : collisions)
+        {
+            collisionCalc::drawCollision(helper, coll.second);
+        }
+
         if (true == mouse_drag)
         {
             auto dist = globalDrag + globalDragOffset;
-            helper->paintLine(globalDrag, dist);
+            helper->paintLine(globalDrag, dist, helper->dragYellow);
         }
 
         auto w = helper->getSize().width();
@@ -693,5 +718,72 @@ namespace lib2d
             }
         }
         return;
+    }
+
+    void collisionCalc::collisionPrepare(collision & coll)
+    {
+        static const double kBiasFactor = 0.2;
+        const auto & a = *coll.bodyA;
+        const auto & b = *coll.bodyB;
+        auto tangent = coll.N.normal();
+        for (auto & contact : coll.contacts)
+        {
+            auto nA = contact.ra.cross(coll.N);
+            auto nB = contact.rb.cross(coll.N);
+            auto kn = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * nA * nA + std::abs(b.inertia.inv) * nB * nB;
+            contact.massNormal = 0;
+            auto tA = contact.ra.cross(tangent);
+            auto tB = contact.rb.cross(tangent);
+            auto kt = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * tA * tA + std::abs(b.inertia.inv) * tB * tB;
+            contact.massTangent = 0;
+            contact.bias = -kBiasFactor * world2d::dtInv * contact.sep;
+        }
+    }
+
+    void collisionCalc::drawCollision(Helper2d * helper, const collision & coll)
+    {
+        v2 ptA1;
+        v2 ptA2;
+        const auto typeA = coll.bodyA->type();
+        const auto typeB = coll.bodyB->type();
+        auto showA = false;
+        auto showB = false;
+        if (POLYGON == typeA)
+        {
+            showA = true;
+            auto bodyA = std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
+            ptA1 = bodyA->verticesWorld[coll.idxA % bodyA->verticesWorld.size()];
+            ptA2 = bodyA->verticesWorld[(coll.idxA + 1) % bodyA->verticesWorld.size()];
+            helper->paintLine(ptA1, ptA2, helper->dragRed);
+        }
+        if (showA && showB)
+        {
+            for (auto & contact : coll.contacts)
+            {
+                //helper->paintPoint(contact.pos);
+            }
+        }
+    }
+
+    void collisionCalc::collisionUpdate(collision & coll, const collision & oldColl)
+    {
+        auto & a = *coll.bodyA;
+        auto & b = *coll.bodyB;
+
+        const auto & oldContacts = oldColl.contacts;
+        for (auto & newContact : coll.contacts)
+        {
+            auto oldContact = std::find(oldContacts.begin(), oldContacts.end(), newContact);
+            if (oldContact != oldContacts.end())                            //同一碰撞点的更新
+            {
+                newContact.pn = oldContact->pn;
+                newContact.pt = oldContact->pt;
+
+                auto tangent = coll.N.normal();                             //新的切线
+                auto p = newContact.pn * coll.N + newContact.pt * tangent;  //新的冲量
+                a.impulse(-p, newContact.ra);                             //施加力矩
+                b.impulse(p, newContact.rb);
+            }
+        }
     }
 }

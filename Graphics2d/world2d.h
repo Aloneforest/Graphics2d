@@ -65,6 +65,36 @@ namespace lib2d
 		m2 inv() const;							//行列式求逆
 	};
 
+    struct doubleInv
+    {
+        double value{ 0 };
+        double inv{ 0 };
+        explicit doubleInv(double v)
+        {
+            set(v);
+        }
+
+        void set(double v)
+        {
+            value = v;
+            if (std::isinf(value))
+            {
+                inv = 0;
+            }
+            else if (std::abs(value) < 1e-6)
+            {
+                inv = inf;
+            }
+            inv = 1 / value;
+        }
+    };
+
+    enum body2dType
+    {
+        POLYGON,
+        CIRCLE
+    };
+
 	class body2d
 	{
 	public:
@@ -77,20 +107,26 @@ namespace lib2d
         virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体施加力矩
         virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
-        virtual void impulse(const v2 & p, const v2 & r) = 0;
+        virtual void impulse(const v2 & p, const v2 & r) = 0;       //计算冲量
+
+        virtual v2 world() const = 0;
+        virtual body2dType type() const = 0;
+
+        virtual v2 min() const = 0;
+        virtual v2 max() const = 0;
 
 		virtual void update(const v2, int) = 0;                     //更新状态
 		virtual void draw(Helper2d * help2d) = 0;                   //画图
 
         int collNum{ 0 };       //碰撞次数
 		uint16_t id{ 0 };	    //ID
-		double mass{ 0 };	    //质量
+        doubleInv mass{ 0 };	//质量
 		v2 pos;				    //世界坐标
 		v2 center;			    //重心
 		v2 V;				    //速度
         double angle{ 0 };	    //角度
         double angleV{ 0 };	    //角速度
-        double inertia{ 0 };    //转动惯量
+        doubleInv inertia{ 0 }; //转动惯量
         double f{ 1 };          //滑动/静摩擦系数
 		m2 R;				    //旋转矩阵
 		v2 F;				    //受力
@@ -105,7 +141,7 @@ namespace lib2d
 
         double calcPolygonArea();		            //计算多边形面积
         v2 calcPolygonCentroid();		            //计算多边形重心
-        double calcPolygonInertia();		        //计算多边形转动变量
+        double calcPolygonInertia(double mass);		        //计算多边形转动变量
         void calcPolygonBounds();		            //计算多边形外包矩阵
         bool containsInBound(const v2 & pt);		//判断点是否在多边形外包矩阵内
         bool containsInPolygon(const v2 & pt);		//判断点是否在多边形内
@@ -118,20 +154,16 @@ namespace lib2d
 
         void impulse(const v2 & p, const v2 & r) override;
 
+        v2 world() const override;
+        body2dType type() const override;
+
+        v2 min() const override;
+        v2 max() const override;
+
 		void update(const v2 gravity, int n) override;
 		void draw(Helper2d * helper) override;
 
         v2 edge(const size_t idx) const;           //向量|idx+1, idx|
-
-        //v2 & vertexx(size_t idx)
-        //{
-        //    return verticesWorld[idx % verticesWorld.size()];
-        //}
-
-        //size_t index(size_t idx) const
-        //{
-        //    return idx % verticesWorld.size();
-        //}
 
 		std::vector<v2> vertices;			//多边形顶点（本地坐标）
 		std::vector<v2> verticesWorld;		//多边形顶点（世界坐标）
@@ -163,7 +195,6 @@ namespace lib2d
             }
             return idxA == other.idxB && idxB == other.idxA;
         }
-
         bool operator != (const contact & other) const
         {
             return !(*this == other);
@@ -194,11 +225,6 @@ namespace lib2d
 		polygon2d * makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
 		polygon2d * makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
 
-        //void collisionDetection()
-        //{
-
-        //}
-
 		void step(Helper2d * helper);
 		void clear();
 		void init();
@@ -220,8 +246,8 @@ namespace lib2d
 		Helper2d * helper;
 
         bool mouse_drag{ false };       //鼠标拖动
-        v2 globalDrag;                 //鼠标点击点
-        v2 globalDragOffset;          //鼠标移动矢量
+        v2 globalDrag;                  //鼠标点击点
+        v2 globalDragOffset;            //鼠标移动矢量
 
 		std::vector<body2d::ptr> bodies;
         std::vector<body2d::ptr> static_bodies;
@@ -251,46 +277,9 @@ namespace lib2d
         static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);
         static void collisionDetection(world2d &world);
 
-        static void collisionPrepare(collision & coll)
-        {
-            static const double kBiasFactor = 0.2;
-            const auto & a = *coll.bodyA;
-            const auto & b = *coll.bodyB;
-            auto tangent = coll.N.normal();
-            for (auto & contact : coll.contacts)
-            {
-                auto nA = contact.ra.cross(coll.N);
-                auto nB = contact.rb.cross(coll.N);
-                //auto kn = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * nA * nA + std::abs(b.inertia.inv) * nB * nB
-            }
-        }
-
-        static void drawCollision(const collision & coll)
-        {
-
-        }
-
-        static void collisionUpdate(collision & coll, const collision & oldColl)
-        {
-            auto & a = *coll.bodyA;
-            auto & b = *coll.bodyB;
-
-            const auto & oldContacts = oldColl.contacts;
-            for (auto & newContact : coll.contacts)
-            {
-                auto oldContact = std::find(oldContacts.begin(), oldContacts.end(), newContact);
-                if (oldContact != oldContacts.end())                            //同一碰撞点的更新
-                {
-                    newContact.pn = oldContact->pn;
-                    newContact.pt = oldContact->pt;
-
-                    auto tangent = coll.N.normal();                             //新的切线
-                    auto p = newContact.pn * coll.N + newContact.pt * tangent;  //新的冲量
-                    a.impulse(-p, newContact.ra);                             //施加力矩
-                    b.impulse(p, newContact.rb);
-                }
-            }
-        }
+        static void collisionPrepare(collision & coll);                                             //碰撞计算准备
+        static void drawCollision(Helper2d * helper, const collision & coll);                       //绘制碰撞
+        static void collisionUpdate(collision & coll, const collision & oldColl);                   //碰撞更新
     };
 }
 

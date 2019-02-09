@@ -29,7 +29,7 @@ void Helper2d::clear()
 	painter->fillRect(rect, background);
 }
 
-void Helper2d::paintLine(lib2d::v2 a, lib2d::v2 b)
+void Helper2d::paintLine(lib2d::v2 a, lib2d::v2 b, const QPen drag)
 {
     painter->setPen(drag);
     auto pointA = world2screen(a);
@@ -43,13 +43,13 @@ void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
 	vp.clear();
 	vp.resize(v.size());
 	std::transform(v.begin(), v.end(), vp.begin(), world2screen);	//第四个参数需要声明为静态函数
-	painter->setPen(drag);
+	painter->setPen(dragYellow);
 	painter->drawPolygon(vp.data(), (int)vp.size());
 }
 
 void Helper2d::paintText(lib2d::v2 v, const QString & str)
 {
-	painter->setPen(drag);
+	painter->setPen(dragYellow);
 	painter->setFont(text);
 	painter->drawText(v.x, v.y, str);
 }
