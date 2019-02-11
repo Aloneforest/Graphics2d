@@ -29,6 +29,14 @@ void Helper2d::clear()
 	painter->fillRect(rect, background);
 }
 
+void Helper2d::paintPoint(lib2d::v2 pos, const QPen drag)
+{
+    auto a = drag;
+    a.setWidth(4);
+    painter->setPen(a);
+    painter->drawPoint(world2screen(pos));
+}
+
 void Helper2d::paintLine(lib2d::v2 a, lib2d::v2 b, const QPen drag)
 {
     painter->setPen(drag);

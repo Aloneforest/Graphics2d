@@ -13,7 +13,8 @@ public:
 
 	void paint(QPainter * painter, QRect eventRect);
 
-	void clear();
+    void clear();
+    void paintPoint(lib2d::v2 pos, const QPen drag);
 	void paintLine(lib2d::v2 a, lib2d::v2 b, const QPen drag);
 	void paintPolygon(const std::vector<lib2d::v2> &v);
 	void paintText(lib2d::v2 v, const QString & str);
@@ -27,6 +28,7 @@ public:
 
     QPen dragYellow{ QColor(Qt::yellow) };
     QPen dragRed{ QColor(Qt::red) };
+    QPen dragWhite{ QColor(Qt::white)};
 
 private slots:
 	void exec(QString &str);

@@ -4,169 +4,169 @@
 
 namespace lib2d
 {
-	//-------------------v2------------------------------------
+    //-------------------v2------------------------------------
 
-	v2::v2(double _x, double _y) : x(_x), y(_y) {}
+    v2::v2(double _x, double _y) : x(_x), y(_y) {}
 
-	v2 v2::operator* (double d) const
-	{
-		return v2(x * d, y * d);
-	}
+    v2 v2::operator* (double d) const
+    {
+        return v2(x * d, y * d);
+    }
 
-	v2 v2::operator/ (double d) const
-	{
-		return v2(x / d, y / d);
-	}
+    v2 v2::operator/ (double d) const
+    {
+        return v2(x / d, y / d);
+    }
 
-	v2 v2::operator+ (double d) const
-	{
-		return v2(x + d, y + d);
-	}
+    v2 v2::operator+ (double d) const
+    {
+        return v2(x + d, y + d);
+    }
 
-	v2 v2::operator- (double d) const
-	{
-		return v2(x - d, y - d);
-	}
+    v2 v2::operator- (double d) const
+    {
+        return v2(x - d, y - d);
+    }
 
-	v2 v2::operator+ (const v2 &v) const
-	{
-		return v2(x + v.x, y + v.y);
-	}
+    v2 v2::operator+ (const v2 &v) const
+    {
+        return v2(x + v.x, y + v.y);
+    }
 
-	v2 v2::operator- (const v2 &v) const
-	{
-		return v2(x - v.x, y - v.y);
-	}
+    v2 v2::operator- (const v2 &v) const
+    {
+        return v2(x - v.x, y - v.y);
+    }
 
-	v2 &v2::operator+= (const v2 &v)
-	{
-		x += v.x;
-		y += v.y;
-		return *this;
-	}
+    v2 &v2::operator+= (const v2 &v)
+    {
+        x += v.x;
+        y += v.y;
+        return *this;
+    }
 
-	v2 &v2::operator-= (const v2 &v)
-	{
-		x -= v.x;
-		y -= v.y;
-		return *this;
-	}
+    v2 &v2::operator-= (const v2 &v)
+    {
+        x -= v.x;
+        y -= v.y;
+        return *this;
+    }
 
-	v2 v2::operator- () const
-	{
-		return{ -x, -y };
-	}
+    v2 v2::operator- () const
+    {
+        return{ -x, -y };
+    }
 
-	v2 operator* (double d, const v2 &v)
-	{
-		return{ d * v.x, d * v.y };
-	}
+    v2 operator* (double d, const v2 &v)
+    {
+        return{ d * v.x, d * v.y };
+    }
 
-	double v2::cross(const v2 &v) const     //叉乘
-	{
-		return x * v.y - y * v.x;
-	}
+    double v2::cross(const v2 &v) const     //叉乘
+    {
+        return x * v.y - y * v.x;
+    }
 
-	double v2::dot(const v2 &v) const       //点乘
-	{
-		return x * v.x + y * v.y;
-	}
+    double v2::dot(const v2 &v) const       //点乘
+    {
+        return x * v.x + y * v.y;
+    }
 
-	double v2::magnitude() const
-	{
-		return std::sqrt(x * x + y * y);
-	}
+    double v2::magnitude() const
+    {
+        return std::sqrt(x * x + y * y);
+    }
 
-	double v2::magnitudeSquare() const
-	{
-		return x * x + y * y;
-	}
+    double v2::magnitudeSquare() const
+    {
+        return x * x + y * y;
+    }
 
-	v2 v2::normalize() const
-	{
-		return *this / magnitude();
-	}
+    v2 v2::normalize() const
+    {
+        return *this / magnitude();
+    }
 
-	v2 v2::normal() const
-	{
-		return N().normalize();
-	}
+    v2 v2::normal() const
+    {
+        return N().normalize();
+    }
 
-	v2 v2::N() const
-	{
-		return v2{ y, -x };
-	}
+    v2 v2::N() const
+    {
+        return v2{ y, -x };
+    }
 
-	bool v2::zero(double d) const
-	{
-		return std::abs(x) < d && std::abs(y) < d;
-	}
+    bool v2::zero(double d) const
+    {
+        return std::abs(x) < d && std::abs(y) < d;
+    }
 
-	v2 v2::rotate(double theta) const
-	{
-		const auto _sin = std::sin(theta);
-		const auto _cos = std::cos(theta);
-		return{ _cos * x - _sin * y, _sin * x + _cos * y };
-	}
+    v2 v2::rotate(double theta) const
+    {
+        const auto _sin = std::sin(theta);
+        const auto _cos = std::cos(theta);
+        return{ _cos * x - _sin * y, _sin * x + _cos * y };
+    }
 
-	//----------------m2------------------------------
+    //----------------m2------------------------------
 
-	m2::m2(double _x1, double _y1, double _x2, double _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
+    m2::m2(double _x1, double _y1, double _x2, double _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 
-	m2::m2(double d) : x1(d), y1(0), x2(0), y2(d) {}
+    m2::m2(double d) : x1(d), y1(0), x2(0), y2(d) {}
 
-	m2 m2::operator+ (const m2 &m) const
-	{
-		return{ x1 + m.x1, y1 + m.y1 , x2 + m.x2 , y2 + m.y2 };
-	}
+    m2 m2::operator+ (const m2 &m) const
+    {
+        return{ x1 + m.x1, y1 + m.y1 , x2 + m.x2 , y2 + m.y2 };
+    }
 
-	m2 m2::operator* (double d) const
-	{
-		return{ x1 * d, y1 * d, x2 * d, y2 * d };
-	}
+    m2 m2::operator* (double d) const
+    {
+        return{ x1 * d, y1 * d, x2 * d, y2 * d };
+    }
 
-	v2 m2::operator* (const v2 &v) const
-	{
-		return{ x1 * v.x + y1 * v.y , x2 * v.x + y2 * v.y };
-	}
+    v2 m2::operator* (const v2 &v) const
+    {
+        return{ x1 * v.x + y1 * v.y , x2 * v.x + y2 * v.y };
+    }
 
-	m2 operator* (double d, const m2 &m)
-	{
-		return m*d;
-	}
+    m2 operator* (double d, const m2 &m)
+    {
+        return m*d;
+    }
 
-	const m2 m2::rotate(double theta)
-	{
-		const auto _sin = std::sin(theta);
-		const auto _cos = std::cos(theta);
-		*this = m2{ _cos, -_sin, _sin, _cos };  //构造临时对象通过 拷贝赋值运算符 给本结构体赋值
-		return *this;
-	}
+    const m2 m2::rotate(double theta)
+    {
+        const auto _sin = std::sin(theta);
+        const auto _cos = std::cos(theta);
+        *this = m2{ _cos, -_sin, _sin, _cos };  //构造临时对象通过 拷贝赋值运算符 给本结构体赋值
+        return *this;
+    }
 
-	v2 m2::rotate(const v2 &v)const
-	{
-		//|x1,y1| * |v.x| = |x1 * v.x + y1 * v.y|
-		//|x2,y2|   |v.y|   |x2 * v.x + y2 * v.y|
-		return v2{ x1 * v.x + y1 * v.y, x2 * v.x + y2 * v.y };
-	}
+    v2 m2::rotate(const v2 &v)const
+    {
+        //|x1,y1| * |v.x| = |x1 * v.x + y1 * v.y|
+        //|x2,y2|   |v.y|   |x2 * v.x + y2 * v.y|
+        return v2{ x1 * v.x + y1 * v.y, x2 * v.x + y2 * v.y };
+    }
 
-	double m2::det() const
-	{
-		return x1 * y2 - x2 * y1;
-	}
+    double m2::det() const
+    {
+        return x1 * y2 - x2 * y1;
+    }
 
-	m2 m2::inv() const
-	{
-		auto _det = det();
-		return _det == 0 ? m2(inf, inf, inf, inf) : (m2(y2, -x2, -y1, x1) * (1 / _det));
-	}
+    m2 m2::inv() const
+    {
+        auto _det = det();
+        return _det == 0 ? m2(inf, inf, inf, inf) : (m2(y2, -x2, -y1, x1) * (1 / _det));
+    }
 
-	//------------polygon2d--------------------------------------
+    //------------polygon2d--------------------------------------
 
-	polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos), vertices(_vertices), verticesWorld(_vertices) 
-	{
-		init();
-	}
+    polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos), vertices(_vertices), verticesWorld(_vertices) 
+    {
+        init();
+    }
 
     double polygon2d::calcPolygonArea()
     {
@@ -269,7 +269,7 @@ namespace lib2d
         angleV += inertia.inv * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 / 转动惯量
     }
 
-	void polygon2d::init()
+    void polygon2d::init()
     {
         inertia.set(calcPolygonInertia(mass.value));
         center = calcPolygonCentroid();
@@ -282,7 +282,7 @@ namespace lib2d
         }
 
         calcPolygonBounds();
-	}
+    }
 
     void polygon2d::setStatic()
     {
@@ -317,13 +317,13 @@ namespace lib2d
         return boundMax;
     }
 
-	void polygon2d::update(const v2 gravity, int n)
-	{
+    void polygon2d::update(int n)
+    {
         switch (n)
         {
         case 0:
         {
-            F = gravity * mass.value;     //默认受到重力
+            F = world2d::gravity * mass.value;     //默认受到重力
         }
             break;
         case 1:
@@ -347,28 +347,29 @@ namespace lib2d
         default:
             break;
         }
-	}
+    }
 
-	void polygon2d::draw(Helper2d * helper)
-	{
-		helper->paintPolygon(verticesWorld);
-	}
+    void polygon2d::draw(Helper2d * helper)
+    {
+        helper->paintPolygon(verticesWorld);
+    }
 
     v2 polygon2d::edge(const size_t idx) const           //向量|idx+1, idx|
     {
         return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
     }
 
-	//-------------world2d--------------------------------------
+    //-------------world2d--------------------------------------
 
-	QTime world2d::lastClock = QTime::currentTime();
-	double world2d::dt = 1.0 / 30;
-	double world2d::dtInv = 30;
+    QTime world2d::lastClock = QTime::currentTime();
+    double world2d::dt = 1.0 / 30;
+    double world2d::dtInv = 30;
+    v2 world2d::gravity = { 0,0 };//{ 0, -0.2 };
 
-	polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
-	{
-		auto polygon = std::make_unique<polygon2d>(globalId++, mass, pos, vertices);
-		auto obj = polygon.get();
+    polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
+    {
+        auto polygon = std::make_unique<polygon2d>(globalId++, mass, pos, vertices);
+        auto obj = polygon.get();
         if (statics)
         {
             polygon->setStatic();
@@ -378,49 +379,57 @@ namespace lib2d
         {
             bodies.push_back(std::move(polygon));
         }
-		return obj;
-	}
+        return obj;
+    }
 
-	polygon2d * world2d::makeRect(const double mass, double w, double h, const v2 &pos, bool statics = false)
-	{
-		w = std::abs(w);
-		h = std::abs(h);
-		std::vector<v2> vertices =
-		{
-			{ w / 2, h / 2 },
-			{ -w / 2, h / 2 },
-			{ -w / 2, -h / 2 },
-			{ w / 2, -h / 2 },
-		};
-		return makePolygon(mass, vertices, pos, statics);
-	}
+    polygon2d * world2d::makeRect(const double mass, double w, double h, const v2 &pos, bool statics = false)
+    {
+        w = std::abs(w);
+        h = std::abs(h);
+        std::vector<v2> vertices =
+        {
+            { w / 2, h / 2 },
+            { -w / 2, h / 2 },
+            { -w / 2, -h / 2 },
+            { w / 2, -h / 2 },
+        };
+        return makePolygon(mass, vertices, pos, statics);
+    }
 
-	void world2d::step(Helper2d * helper)
-	{
-		auto now = QTime::currentTime();
-		dt = lastClock.msecsTo(now)*0.001;	//计算距离时间t的毫秒数，如果t早于当前时间，则为负
-		dt = std::min(dt, 1.0 / 30);
+    void world2d::step(Helper2d * helper)
+    {
+        auto now = QTime::currentTime();
+        dt = lastClock.msecsTo(now)*0.001;    //计算距离时间t的毫秒数，如果t早于当前时间，则为负
+        dt = std::min(dt, 1.0 / 30);
         dtInv = 1.0 / dt;
-		lastClock = now;
+        lastClock = now;
 
-		helper->clear();
+        helper->clear();
 
-        collisionCalc::collisionDetection(helper->getWorld());  //计算碰撞
+        collisionCalc::collisionDetection(helper->getWorld());  //构造碰撞结构
 
         for (auto & col : collisions)
         {
-            //collisionPrepare(col.second);
+            collisionCalc::collisionPrepare(col.second);        //计算碰撞相关系数
         }
 
-		for (auto &body : bodies)
-		{
-			body->update(gravity, 2);
-		}
+        //for (auto i = 0; i < 10; ++i)
+        //{
+        //    for (auto & coll : collisions)
+        //    {
+        //        collisionCalc::collisionStateUpdate(coll.second);              //更新物体状态
+        //    }
+        //}
 
-		for (auto &body : bodies)
-		{
-			body->draw(helper);
-		}
+        for (auto &body : bodies)
+        {
+            body->update(2);
+        }
+
+        for (auto &body : bodies)
+        {
+            body->draw(helper);
+        }
 
         for (auto &coll : collisions)
         {
@@ -435,31 +444,31 @@ namespace lib2d
 
         auto w = helper->getSize().width();
         auto h = helper->getSize().height();
-	    
+        
         helper->paintText({ 10, 20 }, QString().sprintf("num: %d", collisions.size()));
     }
 
-	void world2d::clear()
-	{
-		bodies.clear();
-	}
+    void world2d::clear()
+    {
+        bodies.clear();
+    }
 
-	void world2d::init()
-	{
-		clear();
-		std::vector<v2> vertices =
-		{
-			{ -0.2, 0 },
-			{ 0.2, 0 },
-			{ 0, 0.3 }
-		};
-		auto p1 = makePolygon(2, vertices, { -0.2, 0 });
+    void world2d::init()
+    {
+        clear();
+        std::vector<v2> vertices =
+        {
+            { -0.2, 0 },
+            { 0.2, 0 },
+            { 0, 0.3 }
+        };
+        auto p1 = makePolygon(2, vertices, { -0.2, 0 });
         //p1->V = v2(0.2, 0);
         //p1->angleV = 0.8;
         auto p2 = makePolygon(2, vertices, { 0.2, 0 });
         //p2->V = v2(-0.2, 0);
         //p2->angleV = -0.8;
-	}
+    }
 
     body2d * world2d::findBody(const v2 & pos)               //查找点所在图形
     {
@@ -510,10 +519,10 @@ namespace lib2d
         }
     }
 
-	void world2d::world2d::setHelper(Helper2d * helper)
-	{
-		this->helper = helper;
-	}
+    void world2d::world2d::setHelper(Helper2d * helper)
+    {
+        this->helper = helper;
+    }
 
     //-------------collisionCalc-------------------------------------
 
@@ -569,7 +578,7 @@ namespace lib2d
         {
             auto edgeNormal = body->edge(i).normal();   //向量|body[i+1], body[i]|的法向量
             auto dot = edgeNormal.dot(N);               //向量|body[i+1], body[i]|的法向量 投影到向量 N 上
-            if (dot < minDot)                           //查找最小间隙
+            if (dot < minDot)                           //查找最小距离
             {
                 minDot = dot;
                 idx = i;
@@ -582,16 +591,16 @@ namespace lib2d
     {
         size_t numOut = 0;
         auto N = (p2 - p1).normal();
-        auto dist0 = N.dot(in[0].pos - p1);
-        auto dist1 = N.dot(in[1].pos - p2);
+        auto dist0 = N.dot(in[0].pos - p1);     //投影长度
+        auto dist1 = N.dot(in[1].pos - p1);
 
-        if (dist0 <= 0) out[numOut++] = in[0];
+        if (dist0 <= 0) out[numOut++] = in[0];  //投影小于0，则在物体A内
         if (dist1 <= 0) out[numOut++] = in[1];
 
         if (dist0 * dist1 < 0)
         {
             auto interp = dist0 / (dist0 - dist1);
-            out[numOut].pos = in[0].pos + interp * (in[1].pos - in[0].pos);
+            out[numOut].pos = in[0].pos + interp * (in[1].pos - in[0].pos); //计算|p1,p2|与|in1,in2|交点
             out[numOut].idxA = -(int)i - 1;
             ++numOut;
         }
@@ -599,33 +608,34 @@ namespace lib2d
         return numOut;
     }
 
-    bool collisionCalc::solveCollition(collision & c)   //计算碰撞
+    bool collisionCalc::solveCollition(collision & coll)   //计算碰撞
     {
-        //间隙最小
-        if (c.satA < c.satB)
+        //A的SAT更接近0
+        if (coll.satA < coll.satB)
         {
-            std::swap(c.bodyA, c.bodyB);
-            std::swap(c.idxA, c.idxB);
-            std::swap(c.satA, c.satB);
+            std::swap(coll.bodyA, coll.bodyB);
+            std::swap(coll.idxA, coll.idxB);
+            std::swap(coll.satA, coll.satB);
         }
 
-        auto bodyA = std::dynamic_pointer_cast<polygon2d>(c.bodyA);
-        auto bodyB = std::dynamic_pointer_cast<polygon2d>(c.bodyB);
+        auto bodyA = std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
+        auto bodyB = std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
         auto bodyASize = bodyA->verticesWorld.size();
         auto bodyBSize = bodyB->verticesWorld.size();
 
-        c.N = bodyA->edge(c.idxA).normal();
-        c.idxB = incidentEdge(c.N, bodyB);
+        coll.N = bodyA->edge(coll.idxA).normal();       //计算SAT轴的法线
+        coll.idxB = incidentEdge(coll.N, bodyB);        //获取离A物体最近的B物体的边
 
-        decltype(c.contacts) contacts;          //获取类型
+        decltype(coll.contacts) contacts;               //获取类型
 
-        contacts.emplace_back(bodyB->verticesWorld[c.idxB % bodyBSize], c.idxB % bodyBSize + 1);
-        contacts.emplace_back(bodyB->verticesWorld[(c.idxB + 1) % bodyBSize], (c.idxB + 1) % bodyBSize + 1);
+        //假定两个接触点（即idxB两端点）
+        contacts.emplace_back(bodyB->verticesWorld[coll.idxB % bodyBSize], coll.idxB % bodyBSize + 1);
+        contacts.emplace_back(bodyB->verticesWorld[(coll.idxB + 1) % bodyBSize], (coll.idxB + 1) % bodyBSize + 1);
         auto tmp = contacts;
 
         for (size_t i = 0; i < bodyA->verticesWorld.size(); ++i)
         {
-            if (i == c.idxA)
+            if (i == coll.idxA)
             {
                 continue;
             }
@@ -636,21 +646,43 @@ namespace lib2d
             contacts = tmp;
         }
 
-        auto va = bodyA->verticesWorld[c.idxA % bodyBSize];
+        auto va = bodyA->verticesWorld[coll.idxA % bodyASize];
 
-        for (auto & contact : contacts)
+        for (auto & contact : contacts) //交点：contact.pos    参考点：接触边端点va
         {
-            auto sep = (contact.pos - va).dot(c.N);
-            if (sep <= 0)
+            auto sep = (contact.pos - va).dot(coll.N);
+            if (sep <= 0)                       //查找bodyA内的接触点
             {
-                contact.sep = sep;
-                contact.ra = contact.pos - c.bodyA->pos - c.bodyA->center;
-                contact.rb = contact.pos - c.bodyB->pos - c.bodyB->center;
-                c.contacts.push_back(contact);
+                contact.sep = sep;              //sep越小，端点va到交点pos所成线段的斜率越接近法线N
+                contact.ra = contact.pos - coll.bodyA->pos - coll.bodyA->center;
+                contact.rb = contact.pos - coll.bodyB->pos - coll.bodyB->center;
+                coll.contacts.push_back(contact);
             }
         }
 
         return true;
+    }
+
+    void collisionCalc::collisionUpdate(collision & coll, const collision & oldColl)
+    {
+        auto & a = *coll.bodyA;
+        auto & b = *coll.bodyB;
+
+        const auto & oldContacts = oldColl.contacts;
+        for (auto & newContact : coll.contacts)
+        {
+            auto oldContact = std::find(oldContacts.begin(), oldContacts.end(), newContact);
+            if (oldContact != oldContacts.end())                            //同一碰撞点的更新
+            {
+                newContact.pn = oldContact->pn;
+                newContact.pt = oldContact->pt;
+
+                auto tangent = coll.N.normal();                             //切线方向
+                auto p = newContact.pn * coll.N + newContact.pt * tangent;  //冲量 = 法线方向冲量 + 切线方向冲量
+                a.impulse(-p, newContact.ra);                               //施加力矩
+                b.impulse(p, newContact.rb);
+            }
+        }
     }
 
     void collisionCalc::collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world)
@@ -668,6 +700,7 @@ namespace lib2d
             auto prev = world.collisions.find(id);
             if (prev != world.collisions.end())
             {
+                world.collisions.erase(prev);
                 bodyA->collNum--;
                 bodyB->collNum--;
             }
@@ -703,7 +736,7 @@ namespace lib2d
     void collisionCalc::collisionDetection(world2d &world)
     {
         auto size = world.bodies.size();
-        for (size_t i = 0; i < size; ++i)
+        for (size_t i = 0; i < size; ++i)           //遍历所有物体与其他可动物体和静态物体间的碰撞情况
         {
             for (size_t j = 0; j < size; ++j)
             {
@@ -722,28 +755,65 @@ namespace lib2d
 
     void collisionCalc::collisionPrepare(collision & coll)
     {
-        static const double kBiasFactor = 0.2;
+        static const double kBiasFactor = 0.2;  //碰撞系数
         const auto & a = *coll.bodyA;
         const auto & b = *coll.bodyB;
         auto tangent = coll.N.normal();
+
         for (auto & contact : coll.contacts)
         {
-            auto nA = contact.ra.cross(coll.N);
+            auto nA = contact.ra.cross(coll.N);     //力矩法线方向投影
             auto nB = contact.rb.cross(coll.N);
             auto kn = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * nA * nA + std::abs(b.inertia.inv) * nB * nB;
-            contact.massNormal = 0;
-            auto tA = contact.ra.cross(tangent);
+            contact.massNormal = kn > 0 ? 1.0 / kn : 0.0;
+
+            auto tA = contact.ra.cross(tangent);    //力矩切线方向投影
             auto tB = contact.rb.cross(tangent);
             auto kt = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * tA * tA + std::abs(b.inertia.inv) * tB * tB;
-            contact.massTangent = 0;
+            contact.massTangent = kt > 0 ? 1.0 / kt : 0.0;
+
             contact.bias = -kBiasFactor * world2d::dtInv * contact.sep;
+        }
+    }
+
+    void collisionCalc::collisionStateUpdate(collision & coll)
+    {
+        auto & a = *coll.bodyA;
+        auto & b = *coll.bodyB;
+
+        auto tangent = coll.N.normal();
+        for (auto & contact : coll.contacts)
+        {
+            auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.rb.N()));  //合速度
+
+            auto vn = dv.dot(coll.N);                                                       //法线方向速度分量
+            auto dpn = (-vn + contact.bias) * contact.massNormal;                           //法向冲量增量
+            if (contact.pn + dpn < 0)
+            {
+                dpn = -contact.pn;
+            }
+
+            auto vt = dv.dot(tangent);                                                      //切线方向速度分量
+            auto dpt = -vt * contact.massTangent;                                           //切向冲量增量
+            auto friction = sqrt(a.f * b.f) * contact.pn;                                   //摩擦力
+            dpt = std::max(-friction, std::min(friction, contact.pt + dpt)) - contact.pt;
+
+            a.update(0);
+            b.update(0);
+
+            auto p = dpn * coll.N + dpt * tangent;
+            a.impulse(-p, contact.ra);
+            b.impulse(p, contact.rb);
+            contact.pn += dpn;
+            contact.pt += dpt;
+
+            a.update(1);
+            b.update(1);
         }
     }
 
     void collisionCalc::drawCollision(Helper2d * helper, const collision & coll)
     {
-        v2 ptA1;
-        v2 ptA2;
         const auto typeA = coll.bodyA->type();
         const auto typeB = coll.bodyB->type();
         auto showA = false;
@@ -752,38 +822,25 @@ namespace lib2d
         {
             showA = true;
             auto bodyA = std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
-            ptA1 = bodyA->verticesWorld[coll.idxA % bodyA->verticesWorld.size()];
-            ptA2 = bodyA->verticesWorld[(coll.idxA + 1) % bodyA->verticesWorld.size()];
+            auto ptA1 = bodyA->verticesWorld[coll.idxA % bodyA->verticesWorld.size()];
+            auto ptA2 = bodyA->verticesWorld[(coll.idxA + 1) % bodyA->verticesWorld.size()];
             helper->paintLine(ptA1, ptA2, helper->dragRed);
+        }
+        if (POLYGON == typeB)
+        {
+            showB = true;
+            auto bodyB = std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
+            auto ptB1 = bodyB->verticesWorld[coll.idxB % bodyB->verticesWorld.size()];
+            auto ptB2 = bodyB->verticesWorld[(coll.idxB + 1) % bodyB->verticesWorld.size()];
+            helper->paintLine(ptB1, ptB2, helper->dragRed);
         }
         if (showA && showB)
         {
             for (auto & contact : coll.contacts)
             {
-                //helper->paintPoint(contact.pos);
+                helper->paintPoint(contact.pos, helper->dragWhite);
             }
         }
     }
 
-    void collisionCalc::collisionUpdate(collision & coll, const collision & oldColl)
-    {
-        auto & a = *coll.bodyA;
-        auto & b = *coll.bodyB;
-
-        const auto & oldContacts = oldColl.contacts;
-        for (auto & newContact : coll.contacts)
-        {
-            auto oldContact = std::find(oldContacts.begin(), oldContacts.end(), newContact);
-            if (oldContact != oldContacts.end())                            //同一碰撞点的更新
-            {
-                newContact.pn = oldContact->pn;
-                newContact.pt = oldContact->pt;
-
-                auto tangent = coll.N.normal();                             //新的切线
-                auto p = newContact.pn * coll.N + newContact.pt * tangent;  //新的冲量
-                a.impulse(-p, newContact.ra);                             //施加力矩
-                b.impulse(p, newContact.rb);
-            }
-        }
-    }
 }
