@@ -456,16 +456,23 @@ namespace lib2d
     void world2d::init()
     {
         clear();
-        std::vector<v2> vertices =
+        std::vector<v2> vertices1 =
         {
             { -0.2, 0 },
             { 0.2, 0 },
             { 0, 0.3 }
         };
-        auto p1 = makePolygon(2, vertices, { -0.2, 0 });
+        std::vector<v2> vertices2 =
+        {
+            { -0.2, 0 },
+            { 0.2, 0 },
+            { 0.2, 0.2 },
+            { -0.2, 0.2 }
+        };
+        auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
         //p1->V = v2(0.2, 0);
         //p1->angleV = 0.8;
-        auto p2 = makePolygon(2, vertices, { 0.2, 0 });
+        auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
         //p2->V = v2(-0.2, 0);
         //p2->angleV = -0.8;
     }
@@ -755,7 +762,7 @@ namespace lib2d
 
     void collisionCalc::collisionPrepare(collision & coll)
     {
-        static const double kBiasFactor = 0.2;  //碰撞系数
+        const double kBiasFactor = 0.2;  //碰撞系数
         const auto & a = *coll.bodyA;
         const auto & b = *coll.bodyB;
         auto tangent = coll.N.normal();
