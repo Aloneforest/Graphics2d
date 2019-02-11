@@ -413,13 +413,13 @@ namespace lib2d
             collisionCalc::collisionPrepare(col.second);        //计算碰撞相关系数
         }
 
-        //for (auto i = 0; i < 10; ++i)
-        //{
-        //    for (auto & coll : collisions)
-        //    {
-        //        collisionCalc::collisionStateUpdate(coll.second);              //更新物体状态
-        //    }
-        //}
+        for (auto i = 0; i < 10; ++i)
+        {
+            for (auto & coll : collisions)
+            {
+                collisionCalc::collisionStateUpdate(coll.second);              //更新物体状态
+            }
+        }
 
         for (auto &body : bodies)
         {
@@ -472,7 +472,7 @@ namespace lib2d
         auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
         //p1->V = v2(0.2, 0);
         //p1->angleV = 0.8;
-        auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+        auto p2 = makePolygon(2, vertices1, { 0.2, 0 });
         //p2->V = v2(-0.2, 0);
         //p2->angleV = -0.8;
     }
@@ -791,7 +791,7 @@ namespace lib2d
         auto tangent = coll.N.normal();
         for (auto & contact : coll.contacts)
         {
-            auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.rb.N()));  //合速度
+            auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.ra.N()));  //合速度
 
             auto vn = dv.dot(coll.N);                                                       //法线方向速度分量
             auto dpn = (-vn + contact.bias) * contact.massNormal;                           //法向冲量增量
