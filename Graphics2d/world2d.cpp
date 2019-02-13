@@ -321,19 +321,19 @@ namespace lib2d
     {
         switch (n)
         {
-        case 0:                                         // 初始化力和力矩
+        case INIT_FORCE_AND_TORQUE:                                         // 初始化力和力矩
         {
             F.x = F.y = 0;
             M = 0;
         }
             break;
-        case 1:                                         // 计算力和力矩，得出速度和角速度
+        case CALC_VELOCITY_AND_ANGULAR_VELOCITY:                                         // 计算力和力矩，得出速度和角速度
         {
             V += F * mass.inv * world2d::dt;            //速度增量 = 加速度 * 时间间隔
             angleV += M * inertia.inv * world2d::dt;    //角速度增量 = 角加速度 * 时间间隔
         }
             break;
-        case 2:                                         // 计算位移和角度
+        case CALC_DISPLACEMENT_AND_ANGLE:                                         // 计算位移和角度
         {
             pos += V * world2d::dt;
             angle += angleV * world2d::dt;
@@ -346,13 +346,13 @@ namespace lib2d
             calcPolygonBounds();
         }
             break;
-        case 3:                                         // 添加重力
+        case ADD_GRAVITY:                                         // 添加重力
         {
             F += world2d::gravity * mass.value * world2d::dt;
             Fa += F;
         }
             break;
-        case 4:                                         // 合外力累计清零
+        case RESET_NET_FORCE:                                         // 合外力累计清零
         {
             Fa.x = Fa.y = 0;
         }
@@ -365,6 +365,15 @@ namespace lib2d
     void polygon2d::draw(Helper2d * helper)
     {
         helper->paintPolygon(verticesWorld);
+
+        auto p = pos + center;
+
+        auto F = v2((Fa.x >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.x) * 5), (Fa.y >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.y) * 5)); // 力向量
+        //auto D = v2(R.x1 * 0.05, R.x2 * 0.05);                //旋转方向
+
+        helper->paintLine(p, p + F, helper->dragYellow);        //力向量
+        helper->paintLine(p, p + V, helper->dragRed);           //速度向量
+        //helper->paintLine(p, p + D, helper->dragWhite);       //方向向量
     }
 
     v2 polygon2d::edge(const size_t idx) const           //向量|idx+1, idx|
@@ -377,7 +386,7 @@ namespace lib2d
     QTime world2d::lastClock = QTime::currentTime();
     double world2d::dt = 1.0 / 30;
     double world2d::dtInv = 30;
-    v2 world2d::gravity = { 0,0 };//{ 0, -0.2 };
+    v2 world2d::gravity = { 0, 0 };//{ 0, -0.2 };
 
     polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
     {
@@ -386,7 +395,7 @@ namespace lib2d
         if (statics)
         {
             polygon->setStatic();
-            static_bodies.push_back(std::move(polygon));
+            staticBodies.push_back(std::move(polygon));
         }
         else
         {
@@ -428,7 +437,7 @@ namespace lib2d
 
         for (auto &body : bodies)
         {
-            body->update(4);
+            body->update(RESET_NET_FORCE);
         }
 
         for (auto i = 0; i < 10; ++i)
@@ -441,13 +450,18 @@ namespace lib2d
 
         for (auto &body : bodies)
         {
-            body->update(0);
-            body->update(3);
-            body->update(1);
-            body->update(2);
+            body->update(INIT_FORCE_AND_TORQUE);
+            body->update(ADD_GRAVITY);
+            body->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+            body->update(CALC_DISPLACEMENT_AND_ANGLE);
         }
 
         for (auto &body : bodies)
+        {
+            body->draw(helper);
+        }
+
+        for (auto &body : staticBodies)
         {
             body->draw(helper);
         }
@@ -474,9 +488,18 @@ namespace lib2d
         bodies.clear();
     }
 
+    void world2d::makeBound()
+    {
+        makeRect(inf, 10, 0.1, { 0, 1.05 }, true)->f = 0.8;
+        makeRect(inf, 10, 0.1, { 0, -1.05 }, true)->f = 0.8;
+        makeRect(inf, 0.1, 10, { 1.05, 0 }, true)->f = 0.8;
+        makeRect(inf, 0.1, 10, { -1.05, 0 }, true)->f = 0.8;
+    }
+
     void world2d::init()
     {
         clear();
+        makeBound();
         std::vector<v2> vertices1 =
         {
             { -0.2, 0 },
@@ -773,7 +796,7 @@ namespace lib2d
                     collisionDetection(world.bodies[i], world.bodies[j], world);
                 }
             }
-            for (auto &body : world.static_bodies)
+            for (auto &body : world.staticBodies)
             {
                 collisionDetection(world.bodies[i], body, world);
             }
@@ -826,8 +849,8 @@ namespace lib2d
             auto friction = sqrt(a.f * b.f) * contact.pn;                                   //摩擦力 = 摩擦系数 * 压力
             dpt = std::max(-friction, std::min(friction, contact.pt + dpt)) - contact.pt;   //累计合力的范围限定在[-friction, friction]内
 
-            a.update(0);
-            b.update(0);
+            a.update(INIT_FORCE_AND_TORQUE);
+            b.update(INIT_FORCE_AND_TORQUE);
 
             auto p = dpn * coll.N + dpt * tangent;
             a.impulse(-p, contact.ra);
@@ -835,8 +858,8 @@ namespace lib2d
             contact.pn += dpn;
             contact.pt += dpt;
 
-            a.update(1);
-            b.update(1);
+            a.update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+            b.update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
         }
     }
 

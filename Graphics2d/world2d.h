@@ -28,19 +28,19 @@ namespace lib2d
         inline v2 operator- () const;
         friend inline v2 operator* (double d, const v2 &v);
 
-        double cross(const v2 &v) const;        // 叉乘
-        double dot(const v2 &v) const;            // 点乘
+        double cross(const v2 &v) const;            // 叉乘
+        double dot(const v2 &v) const;              // 点乘
 
-        double magnitude() const;                // 向量的长度
-        double magnitudeSquare() const;
+        double magnitude() const;                   // 向量的长度
+        double magnitudeSquare() const;             //平方和
 
-        v2 normalize() const;                    // 方向向量
-        v2 normal() const;                        // 法线向量
+        v2 normalize() const;                       // 方向向量
+        v2 normal() const;                          // 法线向量
         v2 N() const;
 
-        bool zero(double d) const;                // 判断向量长度是否为0
+        bool zero(double d) const;                  // 判断向量长度是否为0
 
-        v2 rotate(double theta) const;            // 旋转
+        v2 rotate(double theta) const;              // 旋转
     };
 
     //二维矩阵
@@ -54,22 +54,24 @@ namespace lib2d
         m2 &operator= (const m2 &m) = default;
         m2(double d);
 
-        m2 operator+ (const m2 &m) const;        //矩阵相加
-        v2 operator* (const v2 &v) const;        //矩阵相乘
-        m2 operator* (double d) const;            //数乘
+        m2 operator+ (const m2 &m) const;           //矩阵相加
+        v2 operator* (const v2 &v) const;           //矩阵相乘
+        m2 operator* (double d) const;              //数乘
         friend m2 operator* (double d, const m2 &m);
 
-        const m2 rotate(double theta);            //构造旋转矩阵
+        const m2 rotate(double theta);              //构造旋转矩阵
         v2 rotate(const v2 &v)const;
-        double det() const;                        //行列式的值
-        m2 inv() const;                            //行列式求逆
+        double det() const;                         //行列式的值
+        m2 inv() const;                             //行列式求逆
     };
 
+    //浮点数倒数
     struct doubleInv
     {
-        double value{ 0 };
-        double inv{ 0 };
-        explicit doubleInv(double v)
+        double value{ 0 };                          //值
+        double inv{ 0 };                            //倒数
+
+        explicit doubleInv(double v)                //（必须显示调用构造函数）
         {
             set(v);
         }
@@ -91,8 +93,8 @@ namespace lib2d
 
     enum body2dType
     {
-        POLYGON,
-        CIRCLE
+        POLYGON,                    //多边形
+        CIRCLE                      //圆
     };
 
     class body2d
@@ -104,7 +106,7 @@ namespace lib2d
         body2d(const body2d &) = delete;                            //禁止拷贝
         body2d &operator= (const body2d &) = delete;                //禁止赋值
 
-        virtual void drag(const v2 &pt, const v2 & offset) = 0;     //拖拽物体施加力矩
+        virtual void drag(const v2 & pt, const v2 & offset) = 0;     //拖拽物体施加力矩
         virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
         virtual void impulse(const v2 & p, const v2 & r) = 0;       //受力更新，计算力矩
@@ -139,20 +141,20 @@ namespace lib2d
     public:
         polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices);
 
-        double calcPolygonArea();                   //计算多边形面积
-        v2 calcPolygonCentroid();                   //计算多边形重心
-        double calcPolygonInertia(double mass);     //计算多边形转动变量
-        void calcPolygonBounds();                   //计算多边形外包矩阵
-        bool containsInBound(const v2 & pt);        //判断点是否在多边形外包矩阵内
-        bool containsInPolygon(const v2 & pt);      //判断点是否在多边形内
+        double calcPolygonArea();                               //计算多边形面积
+        v2 calcPolygonCentroid();                               //计算多边形重心
+        double calcPolygonInertia(double mass);                 //计算多边形转动变量
+        void calcPolygonBounds();                               //计算多边形外包矩阵
+        bool containsInBound(const v2 & pt);                    //判断点是否在多边形外包矩阵内
+        bool containsInPolygon(const v2 & pt);                  //判断点是否在多边形内
 
-        void drag(const v2 & pt, const v2 & offset) override;
-        bool contains(const v2 & pt) override;
+        void drag(const v2 & pt, const v2 & offset) override;   //拖拽物体
+        bool contains(const v2 & pt) override;                  //判断相交
 
         void init();
-        void setStatic();                   //静态物体初始化
+        void setStatic();                                       //静态物体初始化
 
-        void impulse(const v2 & p, const v2 & r) override;
+        void impulse(const v2 & p, const v2 & r) override;      //根据动量更新受力和力矩
 
         v2 world() const override;
         body2dType type() const override;
@@ -163,11 +165,11 @@ namespace lib2d
         void update(int n) override;
         void draw(Helper2d * helper) override;
 
-        v2 edge(const size_t idx) const;           //向量|idx+1, idx|
+        v2 edge(const size_t idx) const;                        //向量|idx+1, idx|
 
-        std::vector<v2> vertices;            //多边形顶点（本地坐标）
-        std::vector<v2> verticesWorld;        //多边形顶点（世界坐标）
-        v2 boundMin, boundMax;                //外包矩阵
+        std::vector<v2> vertices;                   //多边形顶点（本地坐标）
+        std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）
+        v2 boundMin, boundMax;                      //外包矩阵
         bool isStatic;
     };
 
@@ -180,8 +182,8 @@ namespace lib2d
         double massNormal{ 0 };
         double massTangent{ 0 };
         double bias{ 0 };
-        double pn{ 0 };             //法向冲量
-        double pt{ 0 };             //切向冲量
+        double pn{ 0 };             //累计法向冲量
+        double pt{ 0 };             //累计切向冲量
         int idxA{ 0 };              //交点所属边的索引+1 （B为正，A为负）
         int idxB{ 0 };
         
@@ -206,13 +208,22 @@ namespace lib2d
     struct collision
     {
         std::vector<contact> contacts;
-        body2d::ptr bodyA;  //碰撞物体A     弱指针？？？？？
-        body2d::ptr bodyB;  //碰撞物体B
-        size_t idxA;        //离B物体最近的A物体的边
-        size_t idxB;        //离A物体最近的B物体的边
-        double satA;        //最大间隙长度
+        body2d::ptr bodyA;                  //碰撞物体A     弱指针？？？？？
+        body2d::ptr bodyB;                  //碰撞物体B
+        size_t idxA;                        //离B物体最近的A物体的边
+        size_t idxB;                        //离A物体最近的B物体的边
+        double satA;                        //最大间隙长度
         double satB;
-        v2 N;               //法线
+        v2 N;                               //法线
+    };
+
+    enum UpdateType
+    {
+        INIT_FORCE_AND_TORQUE,                  //初始化力和力矩
+        CALC_VELOCITY_AND_ANGULAR_VELOCITY,     //计算速度和角速度
+        CALC_DISPLACEMENT_AND_ANGLE,            //计算位移和角度
+        ADD_GRAVITY,                            //添加重力
+        RESET_NET_FORCE                         //重设合外力
     };
 
     class world2d
@@ -228,6 +239,7 @@ namespace lib2d
         void step(Helper2d * helper);
         void clear();
         void init();
+        void makeBound();
 
         body2d * findBody(const v2 & pos);               //查找点所在图形
         void offset(const v2 & pt, const v2 & offset);   //计算点所在图形受力变换
@@ -242,7 +254,6 @@ namespace lib2d
         static double dtInv;
         static v2 gravity;   //重力系数
 
-
     private:
         Helper2d * helper;
 
@@ -251,7 +262,7 @@ namespace lib2d
         v2 globalDragOffset;            //鼠标移动矢量
 
         std::vector<body2d::ptr> bodies;
-        std::vector<body2d::ptr> static_bodies;
+        std::vector<body2d::ptr> staticBodies;
 
         std::unordered_map<uint32_t, collision> collisions;     //hashmap
 
@@ -266,21 +277,21 @@ namespace lib2d
 
         static uint32_t makeId(uint16_t a, uint16_t b);     //两多边形合成ID
 
-        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);   //分离轴算法：遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
-        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);                             //外包矩阵相交判定：若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
+        static bool separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat);                   //分离轴算法：遍历矩阵A所有边，将矩阵B所有顶点投影到边的法线上，若投影长度最小值为负，则相交
+        static bool boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB);                                             //外包矩阵相交判定：若两矩阵中心点相隔距离大于两矩阵边长之和的一半，则不相交
         
         static size_t incidentEdge(const v2 & N, polygon2d::ptr bodyPtr);                                                           //查找最小间隙索引
         static size_t clip(std::vector<contact> & out, const std::vector<contact> & in, size_t i, const v2 & p1, const v2 & p2);    //Sutherland-Hodgman（多边形裁剪）
-        static void collisionUpdate(collision & coll, const collision & oldColl);                   //碰撞更新
+        static void collisionUpdate(collision & coll, const collision & oldColl);                                                   //碰撞更新
         static bool solveCollition(collision & coll);                                                                               //计算碰撞
 
-        static void collisionDetection(world2d &world);                                                             //碰撞检测
-        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);         //两物体间的碰撞检测，构造碰撞结构
+        static void collisionDetection(world2d &world);                                                                             //碰撞检测
+        static void collisionDetection(const body2d::ptr &bodyA, const body2d::ptr &bodyB, world2d &world);                         //两物体间的碰撞检测，构造碰撞结构
 
-        static void collisionPrepare(collision & coll);                                             //碰撞计算准备，计算相关系数
-        static void collisionStateUpdate(collision & coll);                                         //更新物体碰撞后的状态
+        static void collisionPrepare(collision & coll);                                                                             //碰撞计算准备，计算相关系数
+        static void collisionStateUpdate(collision & coll);                                                                         //更新物体碰撞后的状态
 
-        static void drawCollision(Helper2d * helper, const collision & coll);                       //绘制碰撞
+        static void drawCollision(Helper2d * helper, const collision & coll);                                                       //绘制碰撞
     };
 }
 
