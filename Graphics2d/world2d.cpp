@@ -265,8 +265,8 @@ namespace lib2d
 
     void polygon2d::drag(const v2 & pt, const v2 & offset)
     {
-        V += mass.inv * offset;                                       //速度 += 力矩 / 质量
-        angleV += inertia.inv * (pt - pos - center).cross(offset);    //角速度 += 转动半径 x 力矩 / 转动惯量
+        V += mass.inv * offset;                                       //速度 += 动量（力） / 质量
+        angleV += inertia.inv * (pt - pos - center).cross(offset);    //角速度 += 角动量（力矩（重心到受力点向量 x 力）） / 转动惯量
     }
 
     void polygon2d::init()
@@ -321,17 +321,19 @@ namespace lib2d
     {
         switch (n)
         {
-        case 0:
+        case 0:                                         // 初始化力和力矩
         {
-            F = world2d::gravity * mass.value;     //默认受到重力
+            F.x = F.y = 0;
+            M = 0;
         }
             break;
-        case 1:
+        case 1:                                         // 计算力和力矩，得出速度和角速度
         {
-            V += F * mass.inv * world2d::dt;     //速度增量 = 加速度 * 时间间隔
+            V += F * mass.inv * world2d::dt;            //速度增量 = 加速度 * 时间间隔
+            angleV += M * inertia.inv * world2d::dt;    //角速度增量 = 角加速度 * 时间间隔
         }
             break;
-        case 2:
+        case 2:                                         // 计算位移和角度
         {
             pos += V * world2d::dt;
             angle += angleV * world2d::dt;
@@ -342,6 +344,17 @@ namespace lib2d
                 verticesWorld[i] = pos + v;
             }
             calcPolygonBounds();
+        }
+            break;
+        case 3:                                         // 添加重力
+        {
+            F += world2d::gravity * mass.value * world2d::dt;
+            Fa += F;
+        }
+            break;
+        case 4:                                         // 合外力累计清零
+        {
+            Fa.x = Fa.y = 0;
         }
             break;
         default:
@@ -413,6 +426,11 @@ namespace lib2d
             collisionCalc::collisionPrepare(col.second);        //计算碰撞相关系数
         }
 
+        for (auto &body : bodies)
+        {
+            body->update(4);
+        }
+
         for (auto i = 0; i < 10; ++i)
         {
             for (auto & coll : collisions)
@@ -423,6 +441,9 @@ namespace lib2d
 
         for (auto &body : bodies)
         {
+            body->update(0);
+            body->update(3);
+            body->update(1);
             body->update(2);
         }
 
@@ -472,7 +493,7 @@ namespace lib2d
         auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
         //p1->V = v2(0.2, 0);
         //p1->angleV = 0.8;
-        auto p2 = makePolygon(2, vertices1, { 0.2, 0 });
+        auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
         //p2->V = v2(-0.2, 0);
         //p2->angleV = -0.8;
     }
@@ -762,7 +783,7 @@ namespace lib2d
 
     void collisionCalc::collisionPrepare(collision & coll)
     {
-        const double kBiasFactor = 0.2;  //碰撞系数
+        const double kBiasFactor = 0.2;             //碰撞系数
         const auto & a = *coll.bodyA;
         const auto & b = *coll.bodyB;
         auto tangent = coll.N.normal();
@@ -779,7 +800,7 @@ namespace lib2d
             auto kt = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * tA * tA + std::abs(b.inertia.inv) * tB * tB;
             contact.massTangent = kt > 0 ? 1.0 / kt : 0.0;
 
-            contact.bias = -kBiasFactor * world2d::dtInv * contact.sep;
+            contact.bias = -kBiasFactor * world2d::dtInv * std::min(0.0, contact.sep);      //修正碰撞物体相交距离
         }
     }
 
@@ -791,7 +812,7 @@ namespace lib2d
         auto tangent = coll.N.normal();
         for (auto & contact : coll.contacts)
         {
-            auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.ra.N()));  //合速度
+            auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.ra.N()));  //接触相对速度=（B物体平移速度+B物体线速度）-（A物体平移速度+A物体线速度）
 
             auto vn = dv.dot(coll.N);                                                       //法线方向速度分量
             auto dpn = (-vn + contact.bias) * contact.massNormal;                           //法向冲量增量
@@ -802,8 +823,8 @@ namespace lib2d
 
             auto vt = dv.dot(tangent);                                                      //切线方向速度分量
             auto dpt = -vt * contact.massTangent;                                           //切向冲量增量
-            auto friction = sqrt(a.f * b.f) * contact.pn;                                   //摩擦力
-            dpt = std::max(-friction, std::min(friction, contact.pt + dpt)) - contact.pt;
+            auto friction = sqrt(a.f * b.f) * contact.pn;                                   //摩擦力 = 摩擦系数 * 压力
+            dpt = std::max(-friction, std::min(friction, contact.pt + dpt)) - contact.pt;   //累计合力的范围限定在[-friction, friction]内
 
             a.update(0);
             b.update(0);
