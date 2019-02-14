@@ -71,30 +71,14 @@ namespace lib2d
         double value{ 0 };                          //值
         double inv{ 0 };                            //倒数
 
-        explicit doubleInv(double v)                //（必须显示调用构造函数）
-        {
-            set(v);
-        }
-
-        void set(double v)
-        {
-            value = v;
-            if (std::isinf(value))
-            {
-                inv = 0;
-            }
-            else if (std::abs(value) < 1e-6)
-            {
-                inv = inf;
-            }
-            inv = 1 / value;
-        }
+        explicit doubleInv(double v);                //（必须显示调用构造函数）
+        void set(double v);
     };
 
     enum body2dType
     {
-        POLYGON,                    //多边形
-        CIRCLE                      //圆
+        POLYGON,                                    //多边形
+        CIRCLE                                      //圆
     };
 
     class body2d
@@ -189,19 +173,8 @@ namespace lib2d
         
         contact (v2 _pos, size_t _index):pos(_pos), idxA(_index), idxB(_index){}
 
-        bool operator == (const contact & other) const
-        {
-            if (idxA == other.idxA && idxB == other.idxB)
-            {
-                return true;
-            }
-            return idxA == other.idxB && idxB == other.idxA;
-        }
-        bool operator != (const contact & other) const
-        {
-            return !(*this == other);
-        }
-
+        bool operator == (const contact & other) const;
+        bool operator != (const contact & other) const;
     };
 
     //碰撞结构

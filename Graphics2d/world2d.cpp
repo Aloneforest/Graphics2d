@@ -161,6 +161,27 @@ namespace lib2d
         return _det == 0 ? m2(inf, inf, inf, inf) : (m2(y2, -x2, -y1, x1) * (1 / _det));
     }
 
+    //-----------doubleInv-----------------------------------------
+
+    doubleInv::doubleInv(double v)
+    {
+        set(v);
+    }
+
+    void doubleInv::set(double v)
+    {
+        value = v;
+        if (std::isinf(value))
+        {
+            inv = 0;
+        }
+        else if (std::abs(value) < 1e-6)
+        {
+            inv = inf;
+        }
+        inv = 1 / value;
+    }
+
     //------------polygon2d--------------------------------------
 
     polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos), vertices(_vertices), verticesWorld(_vertices) 
@@ -381,6 +402,22 @@ namespace lib2d
         return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
     }
 
+    //-------------contact----------------------------------------
+
+    bool contact::operator == (const contact & other) const
+    {
+        if (idxA == other.idxA && idxB == other.idxB)
+        {
+            return true;
+        }
+        return idxA == other.idxB && idxB == other.idxA;
+    }
+
+    bool contact::operator != (const contact & other) const
+    {
+        return !(*this == other);
+    }
+
     //-------------world2d--------------------------------------
 
     QTime world2d::lastClock = QTime::currentTime();
@@ -394,6 +431,7 @@ namespace lib2d
         auto obj = polygon.get();
         if (statics)
         {
+            polygon->mass.set(inf);
             polygon->setStatic();
             staticBodies.push_back(std::move(polygon));
         }
