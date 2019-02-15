@@ -182,6 +182,18 @@ namespace lib2d
         inv = 1 / value;
     }
 
+    //------------body2d--------------------------------------
+
+    v2 body2d::rotate(const v2 &v) const
+    {
+        return m2().rotate(angle).rotate(v);
+    }
+
+    v2 body2d::world() const
+    {
+        return pos + center;
+    }
+
     //------------polygon2d--------------------------------------
 
     polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos), vertices(_vertices), verticesWorld(_vertices) 
@@ -318,11 +330,6 @@ namespace lib2d
         M += r.cross(_p);
     }
 
-    v2 polygon2d::world() const 
-    {
-        return pos + center;
-    }
-
     body2dType polygon2d::type() const
     {
         return POLYGON;
@@ -402,6 +409,86 @@ namespace lib2d
         return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
     }
 
+    //-------------revoluteJoint----------------------------------------
+
+    revoluteJoint::revoluteJoint(body2d::ptr _a, body2d::ptr _b, const v2 & _anchor) : joint(_a, _b), anchor(_anchor)
+    {
+        localAchorA = m2().rotate(-a->angle).rotate(anchor - a->world());       
+        localAchorB = m2().rotate(-b->angle).rotate(anchor - b->world());
+    }
+
+    void revoluteJoint::prepare()
+    {
+        static const auto kBiasFactor = 0.2;
+        auto a = this->a;
+        auto b = this->b;
+        ra = a->rotate(localAchorA);
+        ra = b->rotate(localAchorB);
+        auto k = m2(a->mass.inv + b->mass.inv)
+            + m2(a->mass.inv * m2(ra.y * ra.y, -ra.y * ra.x, -ra.y * ra.x, ra.x * ra.x)) + m2(b->mass.inv * m2(rb.y * rb.y, -rb.y * rb.x, -rb.y * rb.x, rb.x * rb.x));
+        mass = k.inv();
+        bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra);
+
+        a->update(INIT_FORCE_AND_TORQUE);
+        b->update(INIT_FORCE_AND_TORQUE);
+
+        a->impulse(-p, ra);
+        b->impulse(p, rb);
+
+        a->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+        b->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+    }
+
+    void revoluteJoint::update()
+    {
+        auto a = this->a;
+        auto b = this->b;
+        auto dv = (a->V + (-a->angleV * ra.N())) - (b->V + (-b->angleV * rb.N()));
+
+        p = mass * (dv + bias);
+        if (!p.zero(1e-6))
+        {
+            pAcc = p;
+
+            a->update(INIT_FORCE_AND_TORQUE);
+            b->update(INIT_FORCE_AND_TORQUE);
+
+            a->impulse(-p, ra);
+            b->impulse(p, rb);
+
+            a->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+            b->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+        }
+    }
+
+    void revoluteJoint::draw(Helper2d * helper)
+    {
+        auto centerA = a->world();
+        auto anchorA = worldAnchorA();
+        auto centerB = b->world();
+        auto anchorB = worldAnchorB();
+
+        auto str = std::min(std::log2(1 + pAcc.magnitude()), 10.0) * 0.08;
+        if (!a->isStatic)
+        {
+            helper->paintLine(centerA, anchorA, helper->dragYellow);
+        }
+        if (!b->isStatic)
+        {
+            helper->paintLine(centerB, anchorB, helper->dragYellow);
+        }
+    }
+
+    v2 revoluteJoint::worldAnchorA() const
+    {
+        return a->rotate(localAchorA) + a->world();
+    }
+
+    v2 revoluteJoint::worldAnchorB() const
+    {
+        return b->rotate(localAchorB) + b->world();
+    }
+
     //-------------contact----------------------------------------
 
     bool contact::operator == (const contact & other) const
@@ -455,6 +542,12 @@ namespace lib2d
         };
         return makePolygon(mass, vertices, pos, statics);
     }
+
+    //revoluteJoint * world2d::makeRevoluteJoint(body2d *a, body2d *b, const v2 &anchor)
+    //{
+    //    auto joint = std::make_shared<revoluteJoint>(a, b, anchor);
+    //    joints.push_back(std::move(joint));
+    //}
 
     void world2d::step(Helper2d * helper)
     {
@@ -538,25 +631,33 @@ namespace lib2d
     {
         clear();
         makeBound();
-        std::vector<v2> vertices1 =
-        {
-            { -0.2, 0 },
-            { 0.2, 0 },
-            { 0, 0.3 }
-        };
-        std::vector<v2> vertices2 =
-        {
-            { -0.2, 0 },
-            { 0.2, 0 },
-            { 0.2, 0.2 },
-            { -0.2, 0.2 }
-        };
-        auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
-        //p1->V = v2(0.2, 0);
-        //p1->angleV = 0.8;
-        auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
-        //p2->V = v2(-0.2, 0);
-        //p2->angleV = -0.8;
+        //std::vector<v2> vertices1 =
+        //{
+        //    { -0.2, 0 },
+        //    { 0.2, 0 },
+        //    { 0, 0.3 }
+        //};
+        //std::vector<v2> vertices2 =
+        //{
+        //    { -0.2, 0 },
+        //    { 0.2, 0 },
+        //    { 0.2, 0.2 },
+        //    { -0.2, 0.2 }
+        //};
+        //auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
+        ////p1->V = v2(0.2, 0);
+        ////p1->angleV = 0.8;
+        //auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+        ////p2->V = v2(-0.2, 0);
+        ////p2->angleV = -0.8;
+
+        //auto ground = makeRect(inf, 10, 0.1, { 0, -3 }, true);
+        //auto box1 = makeRect(100, 0.5, 0.5, { 5.75, 3 });
+        //makeRevoluteJoint(ground, box1, { 1.75, 3 });
+        //for (size_t i = 0; i < 5; ++i) {
+        //    auto box2 = makeRect(100, 0.5, 0.5, { 1.25 - i * 0.5, -1 });
+        //    makeRevoluteJoint(ground, box2, { 1.25 - i * 0.5, 3 });
+        //}
     }
 
     body2d * world2d::findBody(const v2 & pos)               //查找点所在图形

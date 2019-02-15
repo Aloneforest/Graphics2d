@@ -94,16 +94,18 @@ namespace lib2d
         virtual bool contains(const v2 & pt) = 0;                   //判断点的包含关系
 
         virtual void impulse(const v2 & p, const v2 & r) = 0;       //受力更新，计算力矩
-
-        virtual v2 world() const = 0;
-        virtual body2dType type() const = 0;
+        virtual body2dType type() const = 0;                        //返回刚体类型
 
         virtual v2 min() const = 0;
         virtual v2 max() const = 0;
 
         virtual void update(int) = 0;                               //更新状态
-        virtual void draw(Helper2d * help2d) = 0;                   //画图
+        virtual void draw(Helper2d * helper) = 0;                   //画图
 
+        v2 rotate(const v2 &v) const;                               //返回向量v经过angle角度旋转后的向量
+        v2 world() const;                                           //返回刚体重心世界坐标
+
+        bool isStatic;
         int collNum{ 0 };           //碰撞次数
         uint16_t id{ 0 };           //ID
         doubleInv mass{ 0 };        //质量
@@ -137,10 +139,7 @@ namespace lib2d
 
         void init();
         void setStatic();                                       //静态物体初始化
-
         void impulse(const v2 & p, const v2 & r) override;      //根据动量更新受力和力矩
-
-        v2 world() const override;
         body2dType type() const override;
 
         v2 min() const override;
@@ -154,7 +153,50 @@ namespace lib2d
         std::vector<v2> vertices;                   //多边形顶点（本地坐标）
         std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）
         v2 boundMin, boundMax;                      //外包矩阵
-        bool isStatic;
+    };
+
+    //关节
+    class joint
+    {
+    public:
+        using ptr = std::shared_ptr<joint>;
+
+        joint(body2d::ptr _a, body2d::ptr _b) : a(_a), b(_b) {}
+        joint(const body2d &) = delete;
+        joint &operator= (const joint &) = delete;
+
+        virtual void prepare() = 0;                             //预处理
+        virtual void update() = 0;                              //更新
+        virtual void draw(Helper2d * helper) = 0;               //绘制
+
+        body2d::ptr a;
+        body2d::ptr b;
+    };
+
+    //旋转关节
+    class revoluteJoint : public joint
+    {
+    public:
+        revoluteJoint(body2d::ptr _a, body2d::ptr _b, const v2 & _anchor);
+        revoluteJoint(const revoluteJoint &) = delete;
+        revoluteJoint &operator= (const revoluteJoint &) = delete;
+
+        void prepare() override;
+        void update() override;
+        void draw(Helper2d * helper) override;
+
+        v2 worldAnchorA() const;
+        v2 worldAnchorB() const;
+
+        v2 anchor;                  //锚点（世界坐标）
+        v2 localAchorA;             //锚点（物体A重心-本地坐标）
+        v2 localAchorB;             //锚点（物体B重心-本地坐标）
+        v2 ra;                      //
+        v2 rb;                      //
+        m2 mass;                    //质量矩阵
+        v2 p;                       //冲量
+        v2 pAcc;                    //冲量累计
+        v2 bias;                    //补偿
     };
 
     //接触点
@@ -208,6 +250,7 @@ namespace lib2d
 
         polygon2d * makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
         polygon2d * makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
+        revoluteJoint * world2d::makeRevoluteJoint(body2d *a, body2d *b, const v2 &anchor);
 
         void step(Helper2d * helper);
         void clear();
@@ -236,6 +279,7 @@ namespace lib2d
 
         std::vector<body2d::ptr> bodies;
         std::vector<body2d::ptr> staticBodies;
+        std::vector<joint::ptr> joints;
 
         std::unordered_map<uint32_t, collision> collisions;     //hashmap
 
