@@ -411,9 +411,9 @@ namespace lib2d
 
     //-------------revoluteJoint----------------------------------------
 
-    revoluteJoint::revoluteJoint(body2d::ptr _a, body2d::ptr _b, const v2 & _anchor) : joint(_a, _b), anchor(_anchor)
+    revoluteJoint::revoluteJoint(body2d::ptr &_a, body2d::ptr &_b, const v2 & _anchor) : joint(_a, _b), anchor(_anchor)
     {
-        localAchorA = m2().rotate(-a->angle).rotate(anchor - a->world());       
+        localAchorA = m2().rotate(-a->angle).rotate(anchor - a->world());
         localAchorB = m2().rotate(-b->angle).rotate(anchor - b->world());
     }
 
@@ -422,12 +422,12 @@ namespace lib2d
         static const auto kBiasFactor = 0.2;
         auto a = this->a;
         auto b = this->b;
-        ra = a->rotate(localAchorA);
-        ra = b->rotate(localAchorB);
+        ra = a->rotate(localAchorA);    //锚点世界坐标
+        rb = b->rotate(localAchorB);
         auto k = m2(a->mass.inv + b->mass.inv)
-            + m2(a->mass.inv * m2(ra.y * ra.y, -ra.y * ra.x, -ra.y * ra.x, ra.x * ra.x)) + m2(b->mass.inv * m2(rb.y * rb.y, -rb.y * rb.x, -rb.y * rb.x, rb.x * rb.x));
+            + m2(a->inertia.inv * m2(ra.y * ra.y, -ra.y * ra.x, -ra.y * ra.x, ra.x * ra.x)) + m2(b->inertia.inv * m2(rb.y * rb.y, -rb.y * rb.x, -rb.y * rb.x, rb.x * rb.x));
         mass = k.inv();
-        bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra);
+        bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra); //物体A和物体B之间锚点位移修正（两锚点应该重合）
 
         a->update(INIT_FORCE_AND_TORQUE);
         b->update(INIT_FORCE_AND_TORQUE);
@@ -510,26 +510,26 @@ namespace lib2d
     QTime world2d::lastClock = QTime::currentTime();
     double world2d::dt = 1.0 / 30;
     double world2d::dtInv = 30;
-    v2 world2d::gravity = { 0, 0 };//{ 0, -0.2 };
+    v2 world2d::gravity = { 0, -10 };
 
-    polygon2d * world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
+    int world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
     {
         auto polygon = std::make_unique<polygon2d>(globalId++, mass, pos, vertices);
-        auto obj = polygon.get();
         if (statics)
         {
             polygon->mass.set(inf);
             polygon->setStatic();
             staticBodies.push_back(std::move(polygon));
+            return staticBodies.size() - 1;
         }
         else
         {
             bodies.push_back(std::move(polygon));
+            return bodies.size() - 1;
         }
-        return obj;
     }
 
-    polygon2d * world2d::makeRect(const double mass, double w, double h, const v2 &pos, bool statics = false)
+    int world2d::makeRect(const double mass, double w, double h, const v2 &pos, bool statics = false)
     {
         w = std::abs(w);
         h = std::abs(h);
@@ -543,11 +543,11 @@ namespace lib2d
         return makePolygon(mass, vertices, pos, statics);
     }
 
-    //revoluteJoint * world2d::makeRevoluteJoint(body2d *a, body2d *b, const v2 &anchor)
-    //{
-    //    auto joint = std::make_shared<revoluteJoint>(a, b, anchor);
-    //    joints.push_back(std::move(joint));
-    //}
+    void world2d::makeRevoluteJoint(body2d::ptr &a, body2d::ptr &b, const v2 &anchor)
+    {
+        auto joint = std::make_shared<revoluteJoint>(a, b, anchor);
+        joints.push_back(std::move(joint));
+    }
 
     void world2d::step(Helper2d * helper)
     {
@@ -561,24 +561,39 @@ namespace lib2d
 
         collisionCalc::collisionDetection(helper->getWorld());  //构造碰撞结构
 
+        //碰撞预处理
         for (auto & col : collisions)
         {
             collisionCalc::collisionPrepare(col.second);        //计算碰撞相关系数
         }
 
+        //关节预处理
+        for (auto & joint : joints)
+        {
+            joint->prepare();
+        }
+
+        //碰撞外力重设
         for (auto &body : bodies)
         {
             body->update(RESET_NET_FORCE);
         }
 
+        //更新物体应碰撞改变的受力状态
         for (auto i = 0; i < 10; ++i)
         {
             for (auto & coll : collisions)
             {
-                collisionCalc::collisionStateUpdate(coll.second);              //更新物体状态
+                collisionCalc::collisionStateUpdate(coll.second);              
+            }
+
+            for (auto & joint : joints)
+            {
+                joint->update();
             }
         }
 
+        //更新物体速度位置等
         for (auto &body : bodies)
         {
             body->update(INIT_FORCE_AND_TORQUE);
@@ -587,19 +602,28 @@ namespace lib2d
             body->update(CALC_DISPLACEMENT_AND_ANGLE);
         }
 
+        //绘制刚体
         for (auto &body : bodies)
         {
             body->draw(helper);
         }
 
+        //绘制静态刚体
         for (auto &body : staticBodies)
         {
             body->draw(helper);
         }
 
+        //绘制碰撞情况
         for (auto &coll : collisions)
         {
             collisionCalc::drawCollision(helper, coll.second);
+        }
+        
+        //绘制关节
+        for (auto &joint : joints)
+        {
+            joint->draw(helper);
         }
 
         if (true == mouse_drag)
@@ -621,10 +645,10 @@ namespace lib2d
 
     void world2d::makeBound()
     {
-        makeRect(inf, 10, 0.1, { 0, 1.05 }, true)->f = 0.8;
-        makeRect(inf, 10, 0.1, { 0, -1.05 }, true)->f = 0.8;
-        makeRect(inf, 0.1, 10, { 1.05, 0 }, true)->f = 0.8;
-        makeRect(inf, 0.1, 10, { -1.05, 0 }, true)->f = 0.8;
+        //makeRect(inf, 10, 0.1, { 0, 1.05 }, true)->f = 0.8;
+        //makeRect(inf, 10, 0.1, { 0, -1.05 }, true)->f = 0.8;
+        //makeRect(inf, 0.1, 10, { 1.05, 0 }, true)->f = 0.8;
+        //makeRect(inf, 0.1, 10, { -1.05, 0 }, true)->f = 0.8;
     }
 
     void world2d::init()
@@ -651,13 +675,14 @@ namespace lib2d
         ////p2->V = v2(-0.2, 0);
         ////p2->angleV = -0.8;
 
-        //auto ground = makeRect(inf, 10, 0.1, { 0, -3 }, true);
-        //auto box1 = makeRect(100, 0.5, 0.5, { 5.75, 3 });
-        //makeRevoluteJoint(ground, box1, { 1.75, 3 });
-        //for (size_t i = 0; i < 5; ++i) {
-        //    auto box2 = makeRect(100, 0.5, 0.5, { 1.25 - i * 0.5, -1 });
-        //    makeRevoluteJoint(ground, box2, { 1.25 - i * 0.5, 3 });
-        //}
+        auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
+        auto box1 = makeRect(2, 0.2, 0.2, { 0.9, 0.3 });
+        makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.3 });
+        for (size_t i = 0; i < 3; ++i)
+        {
+            auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
+            makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.3 });
+        }
     }
 
     body2d * world2d::findBody(const v2 & pos)               //查找点所在图形

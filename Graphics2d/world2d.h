@@ -105,7 +105,7 @@ namespace lib2d
         v2 rotate(const v2 &v) const;                               //返回向量v经过angle角度旋转后的向量
         v2 world() const;                                           //返回刚体重心世界坐标
 
-        bool isStatic;
+        bool isStatic{ false };
         int collNum{ 0 };           //碰撞次数
         uint16_t id{ 0 };           //ID
         doubleInv mass{ 0 };        //质量
@@ -161,7 +161,7 @@ namespace lib2d
     public:
         using ptr = std::shared_ptr<joint>;
 
-        joint(body2d::ptr _a, body2d::ptr _b) : a(_a), b(_b) {}
+        joint(body2d::ptr &_a, body2d::ptr &_b) : a(_a), b(_b) {}
         joint(const body2d &) = delete;
         joint &operator= (const joint &) = delete;
 
@@ -177,7 +177,7 @@ namespace lib2d
     class revoluteJoint : public joint
     {
     public:
-        revoluteJoint(body2d::ptr _a, body2d::ptr _b, const v2 & _anchor);
+        revoluteJoint(body2d::ptr &_a, body2d::ptr &_b, const v2 & _anchor);
         revoluteJoint(const revoluteJoint &) = delete;
         revoluteJoint &operator= (const revoluteJoint &) = delete;
 
@@ -188,9 +188,9 @@ namespace lib2d
         v2 worldAnchorA() const;
         v2 worldAnchorB() const;
 
-        v2 anchor;                  //锚点（世界坐标）
-        v2 localAchorA;             //锚点（物体A重心-本地坐标）
-        v2 localAchorB;             //锚点（物体B重心-本地坐标）
+        v2 anchor;                  //锚点的世界坐标
+        v2 localAchorA;             //锚点相对物体A的本地坐标
+        v2 localAchorB;             //锚点相对物体A的本地坐标
         v2 ra;                      //
         v2 rb;                      //
         m2 mass;                    //质量矩阵
@@ -248,9 +248,9 @@ namespace lib2d
         world2d() = default;
         ~world2d() = default;
 
-        polygon2d * makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
-        polygon2d * makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
-        revoluteJoint * world2d::makeRevoluteJoint(body2d *a, body2d *b, const v2 &anchor);
+        int makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
+        int makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
+        void world2d::makeRevoluteJoint(body2d::ptr &a, body2d::ptr &b, const v2 &anchor);
 
         void step(Helper2d * helper);
         void clear();
