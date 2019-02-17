@@ -72,7 +72,7 @@ namespace lib2d
         return x * v.x + y * v.y;
     }
 
-    double v2::magnitude() const
+    double v2::magnitude() const    //向量长度
     {
         return std::sqrt(x * x + y * y);
     }
@@ -419,24 +419,24 @@ namespace lib2d
 
     void revoluteJoint::prepare()
     {
-        static const auto kBiasFactor = 0.2;
+        static const auto kBiasFactor = 0.2;             //补偿系数
         auto a = this->a;
         auto b = this->b;
-        ra = a->rotate(localAchorA);    //锚点世界坐标
+        ra = a->rotate(localAchorA);
         rb = b->rotate(localAchorB);
         auto k = m2(a->mass.inv + b->mass.inv)
             + m2(a->inertia.inv * m2(ra.y * ra.y, -ra.y * ra.x, -ra.y * ra.x, ra.x * ra.x)) + m2(b->inertia.inv * m2(rb.y * rb.y, -rb.y * rb.x, -rb.y * rb.x, rb.x * rb.x));
         mass = k.inv();
-        bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra); //物体A和物体B之间锚点位移修正（两锚点应该重合）
+        bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra); //物体A和物体B之间锚点位移修正（两锚点应该重合，两描点世界坐标相减）
 
-        a->update(INIT_FORCE_AND_TORQUE);
-        b->update(INIT_FORCE_AND_TORQUE);
+        //a->update(INIT_FORCE_AND_TORQUE);
+        //b->update(INIT_FORCE_AND_TORQUE);
 
-        a->impulse(-p, ra);
-        b->impulse(p, rb);
+        //a->impulse(-p, ra);
+        //b->impulse(p, rb);
 
-        a->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
-        b->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+        //a->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
+        //b->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
     }
 
     void revoluteJoint::update()
@@ -468,7 +468,6 @@ namespace lib2d
         auto centerB = b->world();
         auto anchorB = worldAnchorB();
 
-        auto str = std::min(std::log2(1 + pAcc.magnitude()), 10.0) * 0.08;
         if (!a->isStatic)
         {
             helper->paintLine(centerA, anchorA, helper->dragYellow);
@@ -653,35 +652,52 @@ namespace lib2d
 
     void world2d::init()
     {
+        scene(0);
+    }
+
+    void world2d::scene(int i)
+    {
         clear();
         makeBound();
-        //std::vector<v2> vertices1 =
-        //{
-        //    { -0.2, 0 },
-        //    { 0.2, 0 },
-        //    { 0, 0.3 }
-        //};
-        //std::vector<v2> vertices2 =
-        //{
-        //    { -0.2, 0 },
-        //    { 0.2, 0 },
-        //    { 0.2, 0.2 },
-        //    { -0.2, 0.2 }
-        //};
-        //auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
-        ////p1->V = v2(0.2, 0);
-        ////p1->angleV = 0.8;
-        //auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
-        ////p2->V = v2(-0.2, 0);
-        ////p2->angleV = -0.8;
-
-        auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
-        auto box1 = makeRect(2, 0.2, 0.2, { 0.9, 0.3 });
-        makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.3 });
-        for (size_t i = 0; i < 3; ++i)
+        switch (i)
         {
-            auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
-            makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.3 });
+        case 0:
+        {
+            std::vector<v2> vertices1 =
+            {
+                { -0.2, 0 },
+                { 0.2, 0 },
+                { 0, 0.3 }
+            };
+            std::vector<v2> vertices2 =
+            {
+                { -0.2, 0 },
+                { 0.2, 0 },
+                { 0.2, 0.2 },
+                { -0.2, 0.2 }
+            };
+            auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
+            //p1->V = v2(0.2, 0);
+            //p1->angleV = 0.8;
+            auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+            //p2->V = v2(-0.2, 0);
+            //p2->angleV = -0.8;
+        }
+            break;
+        case 1:
+        {
+            auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
+            auto box1 = makeRect(2, 0.2, 0.2, { 0.9, 0.3 });
+            makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.3 });
+            for (size_t i = 0; i < 3; ++i)
+            {
+                auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
+                makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.3 });
+            }
+        }
+            break;
+        default:
+            break;
         }
     }
 
@@ -970,7 +986,7 @@ namespace lib2d
 
     void collisionCalc::collisionPrepare(collision & coll)
     {
-        const double kBiasFactor = 0.2;             //碰撞系数
+        const double kBiasFactor = 0.2;             //补偿系数
         const auto & a = *coll.bodyA;
         const auto & b = *coll.bodyB;
         auto tangent = coll.N.normal();

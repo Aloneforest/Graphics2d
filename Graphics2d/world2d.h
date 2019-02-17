@@ -155,7 +155,7 @@ namespace lib2d
         v2 boundMin, boundMax;                      //外包矩阵
     };
 
-    //关节
+    //关节：两个刚体间关系基类
     class joint
     {
     public:
@@ -183,16 +183,16 @@ namespace lib2d
 
         void prepare() override;
         void update() override;
-        void draw(Helper2d * helper) override;
+        void draw(Helper2d * helper) override;      //绘制旋转半径
 
-        v2 worldAnchorA() const;
-        v2 worldAnchorB() const;
+        v2 worldAnchorA() const;                    //物体A锚点世界坐标
+        v2 worldAnchorB() const;                    //物体B锚点世界坐标
 
         v2 anchor;                  //锚点的世界坐标
         v2 localAchorA;             //锚点相对物体A的本地坐标
         v2 localAchorB;             //锚点相对物体A的本地坐标
-        v2 ra;                      //
-        v2 rb;                      //
+        v2 ra;                      //物体A定轴旋转半径（锚点当前相对与物体A重心所在坐标）
+        v2 rb;                      //物体B定轴旋转半径
         m2 mass;                    //质量矩阵
         v2 p;                       //冲量
         v2 pAcc;                    //冲量累计
@@ -255,6 +255,7 @@ namespace lib2d
         void step(Helper2d * helper);
         void clear();
         void init();
+        void scene(int i);
         void makeBound();
 
         body2d * findBody(const v2 & pos);               //查找点所在图形
