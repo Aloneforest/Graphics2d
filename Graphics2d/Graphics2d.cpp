@@ -13,6 +13,7 @@ Graphics2d::Graphics2d(QWidget *parent)
 void Graphics2d::execLispCommand()
 {
 	auto code = ui.console->text();
+    ui.console->clear();
 	if (code.isEmpty())
 		return;
 	if ("exit" == code)

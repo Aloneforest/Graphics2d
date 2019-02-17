@@ -90,5 +90,9 @@ lib2d::v2 Helper2d::screen2world(const QPointF & pt)
 
 void Helper2d::exec(QString & str)
 {
-
+    auto key = str.toInt();
+    if (key >= 0 && key <= 9)
+    {
+        world.scene(key);
+    }
 }

@@ -33,6 +33,15 @@ void Imp2d::paintEvent(QPaintEvent * event)
 	painter.end();
 }
 
+//void Imp2d::keyPressEvent(QKeyEvent * event)
+//{
+//    auto key = event->key();
+//    if (key >= Qt::Key_0 && key <= Qt::Key_9)
+//    {
+//        helper.getWorld().scene(key - '0');
+//    }
+//}
+
 void Imp2d::mousePressEvent(QMouseEvent * event)        //鼠标点击事件
 {
     if (Qt::LeftButton == event->button())

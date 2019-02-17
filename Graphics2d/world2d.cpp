@@ -349,19 +349,19 @@ namespace lib2d
     {
         switch (n)
         {
-        case INIT_FORCE_AND_TORQUE:                                         // 初始化力和力矩
+        case INIT_FORCE_AND_TORQUE:                                     // 初始化力和力矩
         {
             F.x = F.y = 0;
             M = 0;
         }
             break;
-        case CALC_VELOCITY_AND_ANGULAR_VELOCITY:                                         // 计算力和力矩，得出速度和角速度
+        case CALC_VELOCITY_AND_ANGULAR_VELOCITY:                        // 计算速度和角速度
         {
-            V += F * mass.inv * world2d::dt;            //速度增量 = 加速度 * 时间间隔
-            angleV += M * inertia.inv * world2d::dt;    //角速度增量 = 角加速度 * 时间间隔
+            V += F * mass.inv * world2d::dt;                            //速度增量 = 力 * 时间间隔 / 质量
+            angleV += M * inertia.inv * world2d::dt;                    //角速度增量 = 力矩 * 时间间隔 / 转动惯量
         }
             break;
-        case CALC_DISPLACEMENT_AND_ANGLE:                                         // 计算位移和角度
+        case CALC_DISPLACEMENT_AND_ANGLE:                               // 计算位移和角度
         {
             pos += V * world2d::dt;
             angle += angleV * world2d::dt;
@@ -374,13 +374,13 @@ namespace lib2d
             calcPolygonBounds();
         }
             break;
-        case ADD_GRAVITY:                                         // 添加重力
+        case ADD_GRAVITY:                                               // 添加重力
         {
             F += world2d::gravity * mass.value * world2d::dt;
             Fa += F;
         }
             break;
-        case RESET_NET_FORCE:                                         // 合外力累计清零
+        case RESET_NET_FORCE:                                           // 合外力累计清零
         {
             Fa.x = Fa.y = 0;
         }
@@ -399,9 +399,11 @@ namespace lib2d
         auto F = v2((Fa.x >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.x) * 5), (Fa.y >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.y) * 5)); // 力向量
         //auto D = v2(R.x1 * 0.05, R.x2 * 0.05);                //旋转方向
 
-        helper->paintLine(p, p + F, helper->dragYellow);        //力向量
-        helper->paintLine(p, p + V, helper->dragRed);           //速度向量
-        //helper->paintLine(p, p + D, helper->dragWhite);       //方向向量
+        if (false == isStatic)
+        {
+            helper->paintLine(p, p + F, helper->dragYellow);        //力向量
+            helper->paintLine(p, p + V, helper->dragRed);           //速度向量
+        }
     }
 
     v2 polygon2d::edge(const size_t idx) const           //向量|idx+1, idx|
@@ -428,15 +430,6 @@ namespace lib2d
             + m2(a->inertia.inv * m2(ra.y * ra.y, -ra.y * ra.x, -ra.y * ra.x, ra.x * ra.x)) + m2(b->inertia.inv * m2(rb.y * rb.y, -rb.y * rb.x, -rb.y * rb.x, rb.x * rb.x));
         mass = k.inv();
         bias = -kBiasFactor * world2d::dtInv * (b->world() + rb - a->world() - ra); //物体A和物体B之间锚点位移修正（两锚点应该重合，两描点世界坐标相减）
-
-        //a->update(INIT_FORCE_AND_TORQUE);
-        //b->update(INIT_FORCE_AND_TORQUE);
-
-        //a->impulse(-p, ra);
-        //b->impulse(p, rb);
-
-        //a->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
-        //b->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
     }
 
     void revoluteJoint::update()
@@ -639,30 +632,34 @@ namespace lib2d
 
     void world2d::clear()
     {
+        globalId = 1;
         bodies.clear();
+        staticBodies.clear();
+        joints.clear();
+        collisions.clear();
     }
 
     void world2d::makeBound()
     {
-        //makeRect(inf, 10, 0.1, { 0, 1.05 }, true)->f = 0.8;
-        //makeRect(inf, 10, 0.1, { 0, -1.05 }, true)->f = 0.8;
-        //makeRect(inf, 0.1, 10, { 1.05, 0 }, true)->f = 0.8;
-        //makeRect(inf, 0.1, 10, { -1.05, 0 }, true)->f = 0.8;
+        makeRect(inf, 10, 0.1, { 0, 1.05 }, true);
+        makeRect(inf, 10, 0.1, { 0, -1.05 }, true);
+        makeRect(inf, 0.1, 10, { 1.05, 0 }, true);
+        makeRect(inf, 0.1, 10, { -1.05, 0 }, true);
     }
 
     void world2d::init()
     {
-        scene(0);
+        scene(1);
     }
 
     void world2d::scene(int i)
     {
         clear();
-        makeBound();
         switch (i)
         {
-        case 0:
+        case 1:
         {
+            makeBound();
             std::vector<v2> vertices1 =
             {
                 { -0.2, 0 },
@@ -684,12 +681,12 @@ namespace lib2d
             //p2->angleV = -0.8;
         }
             break;
-        case 1:
+        case 2:
         {
             auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
             auto box1 = makeRect(2, 0.2, 0.2, { 0.9, 0.3 });
             makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.3 });
-            for (size_t i = 0; i < 3; ++i)
+            for (size_t i = 0; i < 1; ++i)
             {
                 auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
                 makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.3 });
