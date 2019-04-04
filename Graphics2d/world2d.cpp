@@ -196,9 +196,9 @@ namespace lib2d
 
     //------------polygon2d--------------------------------------
 
-    polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos), vertices(_vertices), verticesWorld(_vertices) 
+    polygon2d::polygon2d(uint16_t _id, double _mass, v2 _pos, const std::vector<v2> &_vertices) :body2d(_id, _mass, _pos)
     {
-        init();
+        init(_vertices);
     }
 
     double polygon2d::calcPolygonArea()
@@ -302,7 +302,7 @@ namespace lib2d
         angleV += inertia.inv * (pt - pos - center).cross(offset);    //角速度 += 角动量（力矩（重心到受力点向量 x 力）） / 转动惯量
     }
 
-    void polygon2d::init()
+    void polygon2d::init(const std::vector<v2> &_vertices)
     {
         inertia.set(calcPolygonInertia(mass.value));
         center = calcPolygonCentroid();
@@ -314,6 +314,8 @@ namespace lib2d
             verticesWorld[i] = pos + v;
         }
 
+        vertices = _vertices;
+        verticesWorld = _vertices;
         calcPolygonBounds();
     }
 
@@ -324,6 +326,7 @@ namespace lib2d
 
     void polygon2d::impulse(const v2 & p, const v2 & r)
     {
+        if (isStatic) return;
         auto _p = p * world2d::dtInv;
         F += _p;
         Fa += _p;
@@ -407,6 +410,98 @@ namespace lib2d
     }
 
     v2 polygon2d::edge(const size_t idx) const           //向量|idx+1, idx|
+    {
+        return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
+    }
+
+    //-------------circle2d----------------------------------------
+
+    circle2d::circle2d(uint16_t _id, double _mass, v2 _pos, double _r) : body2d(_id, _mass, _pos), r(_r)
+    {
+        init();
+    }
+
+    void circle2d::init()
+    {
+        inertia.set(mass.value * r * r * 0.5 ); //质量 * 半径平方 /2
+        int n = int(std::floor(std::pow(2.0, std::log2(M_PI * 2 * r * 64))));
+        auto delta = 2.0 / n;
+
+        for (auto i = 0; i < n; ++i)
+        {
+            vertices.push_back(v2(r * std::cos(i * delta * M_PI), r * std::sin(i * delta * M_PI)));
+        }
+        for (size_t i = 0; i < vertices.size(); ++i)
+        {
+            verticesWorld.push_back(vertices[i] + pos);
+        }
+        boundMin = pos - r;
+        boundMax = pos + r;
+    }
+
+    body2dType circle2d::type() const
+    {
+        return CIRCLE;
+    }
+
+    void circle2d::setStatic()
+    {
+        isStatic = true;
+    }
+
+    void circle2d::impulse(const v2 & p, const v2 & r)
+    {
+        if (isStatic) return;
+        auto _p = p * world2d::dtInv;
+        F += _p;
+        Fa += _p;
+        M += r.cross(_p);
+    }
+
+    void circle2d::drag(const v2 & pt, const v2 & offset)
+    {
+        V += mass.inv * offset;
+        angleV += inertia.inv * (pt - pos - center).cross(offset);
+    }
+
+    
+    bool circle2d::contains(const v2 & pt)
+    {
+        const auto delta = pos + center - pt;
+        return delta.magnitudeSquare() < r * r; 
+    }
+
+    v2 circle2d::min() const
+    {
+        return pos - r;
+    }
+
+    v2 circle2d::max() const
+    {
+        return pos + r;
+    }
+
+    void circle2d::update(int n)
+    {
+
+    }
+
+    void circle2d::draw(Helper2d * helper)
+    {
+        helper->paintCircle(pos, r);
+
+        //auto p = pos + center;
+
+        //auto F = v2((Fa.x >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.x) * 5), (Fa.y >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.y) * 5)); // 力向量
+
+        //if (false == isStatic)
+        //{
+        //    helper->paintLine(p, p + F, helper->dragYellow);        //力向量
+        //    helper->paintLine(p, p + V, helper->dragRed);           //速度向量
+        //}
+    }
+
+    v2 circle2d::edge(const size_t idx) const
     {
         return verticesWorld[(idx + 1) % verticesWorld.size()] - verticesWorld[idx];
     }
@@ -502,7 +597,7 @@ namespace lib2d
     QTime world2d::lastClock = QTime::currentTime();
     double world2d::dt = 1.0 / 30;
     double world2d::dtInv = 30;
-    v2 world2d::gravity = { 0, -10 };
+    v2 world2d::gravity = { 0, -5 };
 
     int world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
     {
@@ -533,6 +628,13 @@ namespace lib2d
             { w / 2, -h / 2 },
         };
         return makePolygon(mass, vertices, pos, statics);
+    }
+
+    int world2d::makeCircle(const double mass, double r, const v2 &pos, const bool statics = false)
+    {
+        auto circle = std::make_unique<circle2d>(globalId++, mass, pos, r);
+        bodies.push_back(std::move(circle));
+        return bodies.size() - 1;;
     }
 
     void world2d::makeRevoluteJoint(body2d::ptr &a, body2d::ptr &b, const v2 &anchor)
@@ -679,17 +781,33 @@ namespace lib2d
             auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
+            //auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
         }
             break;
         case 2:
         {
             auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
-            auto box1 = makeRect(2, 0.2, 0.2, { 0.9, 0.3 });
-            makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.3 });
-            for (size_t i = 0; i < 1; ++i)
+            auto box1 = makeRect(2, 0.2, 0.2, { 1.4, 0.8 });
+            makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.8 });
+            for (size_t i = 0; i < 4; ++i)
             {
                 auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
-                makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.3 });
+                makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
+            }
+        }
+            break;
+        case 3:
+        {
+            auto ground = makeRect(inf, 0.2, 0.2, { -0.3,-0.3 }, true);
+            const double mass = 10.0;
+            auto last = ground;
+            auto box = makeRect(mass, 0.1, 0.02, { 0.05, 0.8 });
+            makeRevoluteJoint(staticBodies[last], bodies[0], { 0, 0.8 });
+            for (int i = 1; i < 15; ++i)
+            {
+                auto box = makeRect(mass, 0.1, 0.02, { 0.05 + 0.11 * i, 0.8 });
+                makeRevoluteJoint(bodies[last], bodies[box], { 0.11*i, 0.8 });
+                last = box;
             }
         }
             break;
@@ -761,8 +879,8 @@ namespace lib2d
 
     bool collisionCalc::separatingAxis(const body2d::ptr &bodyA, const body2d::ptr &bodyB, size_t &idx, double &sat)   //分离轴算法
     {
-        auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
-        auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
+        auto a = bodyA;// std::dynamic_pointer_cast<polygon2d>(bodyA);
+        auto b = bodyB;// std::dynamic_pointer_cast<polygon2d>(bodyB);
 
         sat = -inf;
 
@@ -788,8 +906,8 @@ namespace lib2d
 
     bool collisionCalc::boundCollition(const body2d::ptr &bodyA, const body2d::ptr &bodyB)   //外包矩阵相交判定
     {
-        auto a = std::dynamic_pointer_cast<polygon2d>(bodyA);
-        auto b = std::dynamic_pointer_cast<polygon2d>(bodyB);
+        auto a = bodyA;//std::dynamic_pointer_cast<polygon2d>(bodyA);
+        auto b = bodyB;//std::dynamic_pointer_cast<polygon2d>(bodyB);
         auto centerA = (a->boundMax + a->boundMin) / 2;     //外包矩阵中心
         auto centerB = (b->boundMax + b->boundMin) / 2;
         auto sizeA = (a->boundMax - a->boundMin);           //外包矩阵边长

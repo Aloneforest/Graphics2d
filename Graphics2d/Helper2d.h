@@ -16,7 +16,8 @@ public:
     void clear();
     void paintPoint(lib2d::v2 pos, const QPen drag);
 	void paintLine(lib2d::v2 a, lib2d::v2 b, const QPen drag);
-	void paintPolygon(const std::vector<lib2d::v2> &v);
+    void paintPolygon(const std::vector<lib2d::v2> &v);
+    void paintCircle(lib2d::v2 v, double r);
 	void paintText(lib2d::v2 v, const QString & str);
 
     lib2d::world2d & getWorld();

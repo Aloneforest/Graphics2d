@@ -81,6 +81,8 @@ namespace lib2d
         CIRCLE                                      //圆
     };
 
+    //-------------------------------------------------
+
     class body2d
     {
     public:
@@ -102,6 +104,8 @@ namespace lib2d
         virtual void update(int) = 0;                               //更新状态
         virtual void draw(Helper2d * helper) = 0;                   //画图
 
+        virtual v2 edge(const size_t idx) const = 0;
+
         v2 rotate(const v2 &v) const;                               //返回向量v经过angle角度旋转后的向量
         v2 world() const;                                           //返回刚体重心世界坐标
 
@@ -120,6 +124,9 @@ namespace lib2d
         v2 F;                       //受力
         v2 Fa;                      //受力（合力）
         double M{ 0 };              //力矩
+        v2 boundMin, boundMax;                      //外包矩阵
+        std::vector<v2> vertices;                   //多边形顶点（本地坐标）
+        std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）
     };
 
     class polygon2d : public body2d
@@ -137,6 +144,36 @@ namespace lib2d
         void drag(const v2 & pt, const v2 & offset) override;   //拖拽物体
         bool contains(const v2 & pt) override;                  //判断相交
 
+        void init(const std::vector<v2> &_vertices);
+        void setStatic();                                       //静态物体初始化
+        void impulse(const v2 & p, const v2 & r) override;      //根据动量更新受力和力矩
+        body2dType type() const override;
+
+        v2 min() const override;
+        v2 max() const override;
+
+        void update(int n) override;
+        void draw(Helper2d * helper) override;
+
+        v2 edge(const size_t idx) const override;                        //向量|idx+1, idx|
+
+    };
+
+    class circle2d : public body2d
+    {
+    public:
+        circle2d(uint16_t _id, double _mass, v2 _pos, double _r);
+
+        //double calcPolygonArea();                               //计算多边形面积
+        //v2 calcPolygonCentroid();                               //计算多边形重心
+        //double calcPolygonInertia(double mass);                 //计算多边形转动变量
+        //void calcPolygonBounds();                               //计算多边形外包矩阵
+        //bool containsInBound(const v2 & pt);                    //判断点是否在多边形外包矩阵内
+        //bool containsInPolygon(const v2 & pt);                  //判断点是否在多边形内
+
+        void drag(const v2 & pt, const v2 & offset) override;   //拖拽物体
+        bool contains(const v2 & pt) override;                  //判断相交
+
         void init();
         void setStatic();                                       //静态物体初始化
         void impulse(const v2 & p, const v2 & r) override;      //根据动量更新受力和力矩
@@ -148,11 +185,9 @@ namespace lib2d
         void update(int n) override;
         void draw(Helper2d * helper) override;
 
-        v2 edge(const size_t idx) const;                        //向量|idx+1, idx|
+        v2 edge(const size_t idx) const override;                        //向量|idx+1, idx|
 
-        std::vector<v2> vertices;                   //多边形顶点（本地坐标）
-        std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）
-        v2 boundMin, boundMax;                      //外包矩阵
+        double r;
     };
 
     //关节：两个刚体间关系基类
@@ -199,6 +234,8 @@ namespace lib2d
         v2 bias;                    //补偿
     };
 
+    //----------------------------------------------------------
+
     //接触点
     struct contact
     {
@@ -232,6 +269,7 @@ namespace lib2d
         v2 N;                               //法线
     };
 
+    //计算类型
     enum UpdateType
     {
         INIT_FORCE_AND_TORQUE,                  //初始化力和力矩
@@ -241,6 +279,7 @@ namespace lib2d
         RESET_NET_FORCE                         //重设合外力
     };
 
+    //屏幕
     class world2d
     {
         friend class collisionCalc;
@@ -250,6 +289,7 @@ namespace lib2d
 
         int makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics);
         int makeRect(const double mass, double w, double h, const v2 &pos, const bool statics);
+        int makeCircle(const double mass, double r, const v2 &pos, const bool statics);
         void world2d::makeRevoluteJoint(body2d::ptr &a, body2d::ptr &b, const v2 &anchor);
 
         void step(Helper2d * helper);
@@ -286,7 +326,8 @@ namespace lib2d
 
         uint16_t globalId = 1;
     };
-
+    
+    //碰撞计算
     class collisionCalc
     {
     public:

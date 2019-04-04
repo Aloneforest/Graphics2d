@@ -55,6 +55,12 @@ void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
 	painter->drawPolygon(vp.data(), (int)vp.size());
 }
 
+void Helper2d::paintCircle(lib2d::v2 v, double r)
+{
+    auto R = world2screen(lib2d::v2(r, 0)).x() - world2screen(lib2d::v2()).x();
+    painter->drawEllipse(world2screen(v), R, R);
+}
+
 void Helper2d::paintText(lib2d::v2 v, const QString & str)
 {
 	painter->setPen(dragYellow);
