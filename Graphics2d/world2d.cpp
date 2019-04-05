@@ -304,6 +304,9 @@ namespace lib2d
 
     void polygon2d::init(const std::vector<v2> &_vertices)
     {
+        vertices = _vertices;
+        verticesWorld = _vertices;
+
         inertia.set(calcPolygonInertia(mass.value));
         center = calcPolygonCentroid();
 
@@ -314,8 +317,6 @@ namespace lib2d
             verticesWorld[i] = pos + v;
         }
 
-        vertices = _vertices;
-        verticesWorld = _vertices;
         calcPolygonBounds();
     }
 
@@ -326,7 +327,6 @@ namespace lib2d
 
     void polygon2d::impulse(const v2 & p, const v2 & r)
     {
-        if (isStatic) return;
         auto _p = p * world2d::dtInv;
         F += _p;
         Fa += _p;
@@ -781,7 +781,7 @@ namespace lib2d
             auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
-            //auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
+            auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
         }
             break;
         case 2:
