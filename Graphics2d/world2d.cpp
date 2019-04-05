@@ -820,10 +820,10 @@ namespace lib2d
                 { 0.2, 0.2 },
                 { -0.2, 0.2 }
             };
-            //auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
+            auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
             //p1->V = v2(0.2, 0);
             //p1->angleV = 0.8;
-            //auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+            auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
             auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
@@ -834,9 +834,14 @@ namespace lib2d
             auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
             auto box1 = makeRect(2, 0.2, 0.2, { 1.4, 0.8 });
             makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.8 });
-            for (size_t i = 0; i < 4; ++i)
+            for (size_t i = 0; i < 4; i += 2)
             {
                 auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
+                makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
+            }
+            for (size_t i = 1; i < 4; i += 2)
+            {
+                auto box2 = makeCircle(2, 0.1, { 0.1 - i * 0.2, -0.3 });
                 makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
             }
         }
@@ -1212,7 +1217,7 @@ namespace lib2d
         if (POLYGON == typeA)
         {
             showA = true;
-            auto bodyA = std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
+            auto bodyA = coll.bodyA;// std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
             auto ptA1 = bodyA->verticesWorld[coll.idxA % bodyA->verticesWorld.size()];
             auto ptA2 = bodyA->verticesWorld[(coll.idxA + 1) % bodyA->verticesWorld.size()];
             helper->paintLine(ptA1, ptA2, helper->dragRed);
@@ -1220,7 +1225,7 @@ namespace lib2d
         if (POLYGON == typeB)
         {
             showB = true;
-            auto bodyB = std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
+            auto bodyB = coll.bodyB;//std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
             auto ptB1 = bodyB->verticesWorld[coll.idxB % bodyB->verticesWorld.size()];
             auto ptB2 = bodyB->verticesWorld[(coll.idxB + 1) % bodyB->verticesWorld.size()];
             helper->paintLine(ptB1, ptB2, helper->dragRed);

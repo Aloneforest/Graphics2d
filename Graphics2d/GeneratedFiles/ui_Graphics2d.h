@@ -41,7 +41,7 @@ public:
     {
         if (Graphics2dClass->objectName().isEmpty())
             Graphics2dClass->setObjectName(QStringLiteral("Graphics2dClass"));
-        Graphics2dClass->resize(570, 553);
+        Graphics2dClass->resize(522, 588);
         centralWidget = new QWidget(Graphics2dClass);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         verticalLayout_2 = new QVBoxLayout(centralWidget);
@@ -67,7 +67,7 @@ public:
         Graphics2dClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(Graphics2dClass);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 570, 23));
+        menuBar->setGeometry(QRect(0, 0, 522, 23));
         Graphics2dClass->setMenuBar(menuBar);
         mainToolBar = new QToolBar(Graphics2dClass);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));

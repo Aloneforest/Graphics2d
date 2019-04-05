@@ -3,6 +3,7 @@
 #include "Helper2d.h"
 
 QSizeF Helper2d::mid;
+bool Helper2d::mid_width;
 
 Helper2d::Helper2d()
 {
@@ -19,7 +20,8 @@ void Helper2d::paint(QPainter * painter, QRect eventRect)
 {
 	this->rect = eventRect;
 	this->size = rect.size();
-	this->mid = size * 0.5;
+    this->mid = size * 0.5; 
+    mid_width = mid.width() < mid.height();
 	this->painter = painter;
 	world.step(this);
 }
@@ -87,12 +89,22 @@ QRect Helper2d::getRect()
 
 QPointF Helper2d::world2screen(const lib2d::v2 & v)
 {
-	return QPointF(v.x * mid.width() + mid.width(), -v.y * mid.height() + mid.height());
+	//return QPointF(v.x * mid.width() + mid.width(), -v.y * mid.height() + mid.height());
+
+    if (mid_width)
+        return QPointF((v.x + 1.0) * mid.width(), -v.y * mid.width() + mid.height());
+    else
+        return QPointF(v.x * mid.height() + mid.width(), (-v.y + 1.0) * mid.height());
 }
 
 lib2d::v2 Helper2d::screen2world(const QPointF & pt)
 {
-    return lib2d::v2((pt.x() -  mid.width() ) / mid.width(), (mid.height() - pt.y() ) / mid.height());
+    //return lib2d::v2((pt.x() -  mid.width() ) / mid.width(), (mid.height() - pt.y() ) / mid.height());
+
+    if (mid_width)
+        return lib2d::v2(pt.x() / mid.width() - 1.0, (mid.height() - pt.y()) / mid.width());
+    else
+        return lib2d::v2((pt.x() - mid.width()) / mid.height(), 1.0 - pt.y() / mid.height());
 }
 
 void Helper2d::exec(QString & str)

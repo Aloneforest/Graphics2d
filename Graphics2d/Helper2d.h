@@ -37,7 +37,8 @@ private slots:
 private:
 	QSize size;
 	QRect rect;
-	static QSizeF mid;
+    static QSizeF mid;
+    static bool mid_width;
 
 	QPainter * painter;
 	QBrush background{ QColor(Qt::black) };
