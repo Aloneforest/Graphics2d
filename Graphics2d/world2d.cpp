@@ -421,6 +421,12 @@ namespace lib2d
         init();
     }
 
+    void circle2d::calcCircleBounds()
+    {
+        boundMin = pos - r;
+        boundMax = pos + r;
+    }
+
     void circle2d::init()
     {
         inertia.set(mass.value * r * r * 0.5 ); //质量 * 半径平方 /2
@@ -435,8 +441,7 @@ namespace lib2d
         {
             verticesWorld.push_back(vertices[i] + pos);
         }
-        boundMin = pos - r;
-        boundMax = pos + r;
+        calcCircleBounds();
     }
 
     body2dType circle2d::type() const
@@ -464,7 +469,6 @@ namespace lib2d
         angleV += inertia.inv * (pt - pos - center).cross(offset);
     }
 
-    
     bool circle2d::contains(const v2 & pt)
     {
         const auto delta = pos + center - pt;
@@ -483,22 +487,63 @@ namespace lib2d
 
     void circle2d::update(int n)
     {
-
+        switch (n)
+        {
+        case INIT_FORCE_AND_TORQUE:                                     // 初始化力和力矩
+        {
+            F.x = F.y = 0;
+            M = 0;
+        }
+        break;
+        case CALC_VELOCITY_AND_ANGULAR_VELOCITY:                        // 计算速度和角速度
+        {
+            V += F * mass.inv * world2d::dt;                            //速度增量 = 力 * 时间间隔 / 质量
+            angleV += M * inertia.inv * world2d::dt;                    //角速度增量 = 力矩 * 时间间隔 / 转动惯量
+        }
+        break;
+        case CALC_DISPLACEMENT_AND_ANGLE:                               // 计算位移和角度
+        {
+            pos += V * world2d::dt;
+            angle += angleV * world2d::dt;
+            R.rotate(angle);
+            for (size_t i = 0; i < vertices.size(); i++)
+            {
+                auto v = R.rotate(vertices[i] - center) + center;
+                verticesWorld[i] = pos + v;
+            }
+            calcCircleBounds();
+        }
+        break;
+        case ADD_GRAVITY:                                               // 添加重力
+        {
+            F += world2d::gravity * mass.value * world2d::dt;
+            Fa += F;
+        }
+        break;
+        case RESET_NET_FORCE:                                           // 合外力累计清零
+        {
+            Fa.x = Fa.y = 0;
+        }
+        break;
+        default:
+            break;
+        }
     }
 
     void circle2d::draw(Helper2d * helper)
     {
+        helper->paintPolygon(verticesWorld);
         helper->paintCircle(pos, r);
 
-        //auto p = pos + center;
+        auto p = pos + center;
 
-        //auto F = v2((Fa.x >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.x) * 5), (Fa.y >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.y) * 5)); // 力向量
+        auto F = v2((Fa.x >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.x) * 5), (Fa.y >= 0 ? 0.05 : -0.05) * std::log10(1 + std::abs(Fa.y) * 5)); // 力向量
 
-        //if (false == isStatic)
-        //{
-        //    helper->paintLine(p, p + F, helper->dragYellow);        //力向量
-        //    helper->paintLine(p, p + V, helper->dragRed);           //速度向量
-        //}
+        if (false == isStatic)
+        {
+            helper->paintLine(p, p + F, helper->dragYellow);        //力向量
+            helper->paintLine(p, p + V, helper->dragRed);           //速度向量
+        }
     }
 
     v2 circle2d::edge(const size_t idx) const
@@ -775,10 +820,10 @@ namespace lib2d
                 { 0.2, 0.2 },
                 { -0.2, 0.2 }
             };
-            auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
+            //auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
             //p1->V = v2(0.2, 0);
             //p1->angleV = 0.8;
-            auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+            //auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
             auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
@@ -919,7 +964,7 @@ namespace lib2d
     {
         size_t idx = SIZE_MAX;
         auto minDot = inf;
-        auto body = std::dynamic_pointer_cast<polygon2d>(bodyPtr);
+        auto body = bodyPtr;// std::dynamic_pointer_cast<polygon2d>(bodyPtr);
         for (size_t i = 0; i < body->verticesWorld.size(); ++i)
         {
             auto edgeNormal = body->edge(i).normal();   //向量|body[i+1], body[i]|的法向量
@@ -964,8 +1009,8 @@ namespace lib2d
             std::swap(coll.satA, coll.satB);
         }
 
-        auto bodyA = std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
-        auto bodyB = std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
+        auto bodyA = coll.bodyA;// std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
+        auto bodyB = coll.bodyB;// std::dynamic_pointer_cast<polygon2d>(coll.bodyB);
         auto bodyASize = bodyA->verticesWorld.size();
         auto bodyBSize = bodyB->verticesWorld.size();
 

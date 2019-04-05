@@ -57,7 +57,8 @@ void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
 
 void Helper2d::paintCircle(lib2d::v2 v, double r)
 {
-    auto R = world2screen(lib2d::v2(r, 0)).x() - world2screen(lib2d::v2()).x();
+    auto R = world2screen(lib2d::v2(r, 0)).x() - world2screen(lib2d::v2()).x();//半径在世界坐标的投影长度
+    painter->setPen(dragYellow);
     painter->drawEllipse(world2screen(v), R, R);
 }
 

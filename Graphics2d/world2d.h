@@ -164,12 +164,7 @@ namespace lib2d
     public:
         circle2d(uint16_t _id, double _mass, v2 _pos, double _r);
 
-        //double calcPolygonArea();                               //计算多边形面积
-        //v2 calcPolygonCentroid();                               //计算多边形重心
-        //double calcPolygonInertia(double mass);                 //计算多边形转动变量
-        //void calcPolygonBounds();                               //计算多边形外包矩阵
-        //bool containsInBound(const v2 & pt);                    //判断点是否在多边形外包矩阵内
-        //bool containsInPolygon(const v2 & pt);                  //判断点是否在多边形内
+        void calcCircleBounds();                               //计算多边形外包矩阵
 
         void drag(const v2 & pt, const v2 & offset) override;   //拖拽物体
         bool contains(const v2 & pt) override;                  //判断相交
