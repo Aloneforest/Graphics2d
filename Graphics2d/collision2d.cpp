@@ -58,10 +58,10 @@ namespace lib2d
     {
         auto a = bodyA;//std::dynamic_pointer_cast<polygon2d>(bodyA);
         auto b = bodyB;//std::dynamic_pointer_cast<polygon2d>(bodyB);
-        auto centerA = (a->boundMax + a->boundMin) / 2;     //外包矩阵中心
-        auto centerB = (b->boundMax + b->boundMin) / 2;
-        auto sizeA = (a->boundMax - a->boundMin);           //外包矩阵边长
-        auto sizeB = (b->boundMax - b->boundMin);
+        auto centerA = (a->aabb.boundMax + a->aabb.boundMin) / 2;     //外包矩阵中心
+        auto centerB = (b->aabb.boundMax + b->aabb.boundMin) / 2;
+        auto sizeA = (a->aabb.boundMax - a->aabb.boundMin);           //外包矩阵边长
+        auto sizeB = (b->aabb.boundMax - b->aabb.boundMin);
         return std::abs(centerB.x - centerA.x) / 2 <= (sizeA.x + sizeB.x) && std::abs(centerB.y - centerA.y) / 2 <= (sizeA.y + sizeB.y);
     }
 

@@ -240,11 +240,11 @@ namespace lib2d
             break;
         case 4:
         {
-            auto circleA = makeCircle(inf, 0.1, { 0, 0.1 }, true);
-            auto circleB = makeCircle(0.1, 0.2, { 0, -0.2 });
+            auto circleA = makeCircle(inf, 0.2, { 0, -0.2 }, true);
+            auto circleB = makeCircle(0.1, 0.1, { 0, 0.1 });
             auto ground = makeRect(0.001, 0.01, 1, { 0.35, 0 });
-            makeRevoluteJoint(staticBodies[circleA], bodies[ground], { 0, 0.1 });
-            makeRevoluteJoint(bodies[circleB], bodies[ground], { 0, -0.2 });
+            makeRevoluteJoint(staticBodies[circleA], bodies[ground], { 0, -0.2 });
+            makeRevoluteJoint(bodies[circleB], bodies[ground], { 0, 0.1 });
         }
             break;
         default:

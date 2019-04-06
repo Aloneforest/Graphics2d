@@ -64,22 +64,22 @@ namespace lib2d
 
     void polygon2d::calcPolygonBounds()
     {
-        boundMin = boundMax = verticesWorld[0];
+        aabb.boundMin = aabb.boundMax = verticesWorld[0];
         for (size_t i = 1; i < verticesWorld.size(); ++i)
         {
-            boundMin.x = std::min(boundMin.x, verticesWorld[i].x);
-            boundMin.y = std::min(boundMin.y, verticesWorld[i].y);
-            boundMax.x = std::max(boundMax.x, verticesWorld[i].x);
-            boundMax.y = std::max(boundMax.y, verticesWorld[i].y);
+            aabb.boundMin.x = std::min(aabb.boundMin.x, verticesWorld[i].x);
+            aabb.boundMin.y = std::min(aabb.boundMin.y, verticesWorld[i].y);
+            aabb.boundMax.x = std::max(aabb.boundMax.x, verticesWorld[i].x);
+            aabb.boundMax.y = std::max(aabb.boundMax.y, verticesWorld[i].y);
         }
     }
 
     bool polygon2d::containsInBound(const v2 & pt)
     {
-        return boundMin.x < pt.x &&
-            boundMax.x > pt.x &&
-            boundMin.y < pt.y &&
-            boundMax.y > pt.y;
+        return aabb.boundMin.x < pt.x &&
+            aabb.boundMax.x > pt.x &&
+            aabb.boundMin.y < pt.y &&
+            aabb.boundMax.y > pt.y;
     }
 
     bool polygon2d::containsInPolygon(const v2 & pt)
@@ -162,12 +162,12 @@ namespace lib2d
 
     v2 polygon2d::min() const
     {
-        return boundMin;
+        return aabb.boundMin;
     }
 
     v2 polygon2d::max() const
     {
-        return boundMax;
+        return aabb.boundMax;
     }
 
     void polygon2d::update(int n)
@@ -245,8 +245,8 @@ namespace lib2d
 
     void circle2d::calcCircleBounds()
     {
-        boundMin = pos - r;
-        boundMax = pos + r;
+        aabb.boundMin = pos - r;
+        aabb.boundMax = pos + r;
     }
 
     void circle2d::init()

@@ -145,6 +145,7 @@
     <ClInclude Include="body2d.h" />
     <ClInclude Include="collision2d.h" />
     <ClInclude Include="const2d.h" />
+    <ClInclude Include="dynamicTree2d.h" />
     <ClInclude Include="joint2d.h" />
     <ClInclude Include="math2d.h" />
     <ClInclude Include="world2d.h" />

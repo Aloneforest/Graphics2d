@@ -7,6 +7,11 @@ class Helper2d;
 
 namespace lib2d
 {
+    struct AABB 
+    {
+        v2 boundMin, boundMax;                      //外包矩阵
+    };
+
     class body2d
     {
     public:
@@ -48,7 +53,7 @@ namespace lib2d
         v2 F;                       //受力
         v2 Fa;                      //受力（合力）
         double M{ 0 };              //力矩
-        v2 boundMin, boundMax;                      //外包矩阵
+        AABB aabb;                                  //外包矩阵
         std::vector<v2> vertices;                   //多边形顶点（本地坐标）
         std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）
     };
