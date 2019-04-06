@@ -112,6 +112,8 @@
     </QtRcc>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="body2d.cpp" />
+    <ClCompile Include="collision2d.cpp" />
     <ClCompile Include="Graphics2d.cpp">
       <OutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\%(Filename).moc</OutputFile>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -124,7 +126,9 @@
     </ClCompile>
     <ClCompile Include="Helper2d.cpp" />
     <ClCompile Include="Imp2d.cpp" />
+    <ClCompile Include="joint2d.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="math2d.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="world2d.cpp" />
   </ItemGroup>
@@ -138,6 +142,11 @@
     <QtRcc Include="Graphics2d.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="body2d.h" />
+    <ClInclude Include="collision2d.h" />
+    <ClInclude Include="const2d.h" />
+    <ClInclude Include="joint2d.h" />
+    <ClInclude Include="math2d.h" />
     <ClInclude Include="world2d.h" />
     <QtMoc Include="Helper2d.h">
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName)\.;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets</IncludePath>

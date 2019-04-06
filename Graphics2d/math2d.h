@@ -1,7 +1,7 @@
 #ifndef GRAPHICS2D_MATH2D_H
 #define GRAPHICS2D_MATH2D_H
 
-class Helper2d;
+#include "const2d.h"
 
 namespace lib2d
 {
@@ -15,16 +15,16 @@ namespace lib2d
         v2(const v2 &v) = default;
         v2 &operator= (const v2 &v) = default;
 
-        inline v2 operator* (double d) const;
-        inline v2 operator/ (double d) const;
-        inline v2 operator+ (double d) const;
-        inline v2 operator- (double d) const;
-        inline v2 operator+ (const v2 &v) const;
-        inline v2 operator- (const v2 &v) const;
-        inline v2 &operator+= (const v2 &v);
-        inline v2 &operator-= (const v2 &v);
-        inline v2 operator- () const;
-        friend inline v2 operator* (double d, const v2 &v);
+        v2 operator* (double d) const;
+        v2 operator/ (double d) const;
+        v2 operator+ (double d) const;
+        v2 operator- (double d) const;
+        v2 operator+ (const v2 &v) const;
+        v2 operator- (const v2 &v) const;
+        v2 &operator+= (const v2 &v);
+        v2 &operator-= (const v2 &v);
+        v2 operator- () const;
+        friend v2 operator* (double d, const v2 &v);
 
         double cross(const v2 &v) const;            // ²æ³Ë
         double dot(const v2 &v) const;              // µã³Ë
@@ -74,4 +74,4 @@ namespace lib2d
     };
 }
 
-#endif
+#endif //GRAPHICS2D_MATH2D_H
