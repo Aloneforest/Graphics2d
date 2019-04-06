@@ -104,8 +104,5 @@
     <ClInclude Include="collision2d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dynamicTree2d.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
