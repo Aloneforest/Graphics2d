@@ -678,8 +678,18 @@ namespace lib2d
     int world2d::makeCircle(const double mass, double r, const v2 &pos, const bool statics = false)
     {
         auto circle = std::make_unique<circle2d>(globalId++, mass, pos, r);
-        bodies.push_back(std::move(circle));
-        return bodies.size() - 1;;
+        if (statics)
+        {
+            circle->mass.set(inf);
+            circle->setStatic();
+            staticBodies.push_back(std::move(circle));
+            return staticBodies.size() - 1;
+        }
+        else
+        {
+            bodies.push_back(std::move(circle));
+            return bodies.size() - 1;
+        }
     }
 
     void world2d::makeRevoluteJoint(body2d::ptr &a, body2d::ptr &b, const v2 &anchor)
@@ -827,6 +837,7 @@ namespace lib2d
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
             auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
+            auto p4 = makeCircle(2, 0.1, { 0.5, 0.7 });
         }
             break;
         case 2:
@@ -859,6 +870,15 @@ namespace lib2d
                 makeRevoluteJoint(bodies[last], bodies[box], { 0.11*i, 0.8 });
                 last = box;
             }
+        }
+            break;
+        case 4:
+        {
+            auto circleA = makeCircle(inf, 0.1, { 0, 0.1 }, true);
+            auto circleB = makeCircle(0.1, 0.2, { 0, -0.2 });
+            auto ground = makeRect(0.001, 0.01, 1, { 0.35, 0 });
+            makeRevoluteJoint(staticBodies[circleA], bodies[ground], { 0, 0.1 });
+            makeRevoluteJoint(bodies[circleB], bodies[ground], { 0, -0.2 });
         }
             break;
         default:

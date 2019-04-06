@@ -109,9 +109,16 @@ lib2d::v2 Helper2d::screen2world(const QPointF & pt)
 
 void Helper2d::exec(QString & str)
 {
-    auto key = str.toInt();
-    if (key >= 0 && key <= 9)
+    if (str[0] >='0'  && str[0] <= '9')
     {
+        auto key = str.toInt();
         world.scene(key);
+    }
+    else if(str[0] == 'g')
+    {
+        if(lib2d::world2d::gravity.y == 0)
+            lib2d::world2d::gravity = { 0, -5 };
+        else
+            lib2d::world2d::gravity = { 0, 0 };
     }
 }
