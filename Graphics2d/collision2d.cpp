@@ -144,6 +144,17 @@ namespace lib2d
 
         auto va = bodyA->verticesWorld[coll.idxA % bodyASize];
 
+        //弹性碰撞
+        auto &pos0 = contacts[0].pos;
+        auto &pos1 = contacts[1].pos;
+        const auto CO = bodyA->CO * bodyB->CO;
+        auto dist = std::abs((va - pos0).dot(coll.N));
+        auto bias = std::log10(1 + dist) * CO;
+        pos0 -= coll.N * bias * 10;
+        dist = std::abs((va - pos1).dot(coll.N));
+        bias = std::log10(1 + dist) * CO;
+        pos1 -= coll.N * bias * 10;
+
         for (auto & contact : contacts) //交点：contact.pos    参考点：接触边端点va
         {
             auto sep = (contact.pos - va).dot(coll.N);

@@ -8,7 +8,7 @@ namespace lib2d
     QTime world2d::lastClock = QTime::currentTime();
     double world2d::dt = 1.0 / 30;
     double world2d::dtInv = 30;
-    v2 world2d::gravity = { 0, -5 };
+    v2 world2d::gravity = { 0, -0.5 };
 
     int world2d::makePolygon(const double mass, const std::vector<v2> &vertices, const v2 &pos, const bool statics = false)
     {
@@ -209,16 +209,19 @@ namespace lib2d
         case 2:
         {
             auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
-            auto box1 = makeRect(2, 0.2, 0.2, { 1.4, 0.8 });
+            auto box1 = makeCircle(2, 0.099, { 1.4, 0.8 });
+            bodies[box1]->CO = 0.99;
             makeRevoluteJoint(staticBodies[ground], bodies[box1], { 0.3, 0.8 });
-            for (size_t i = 0; i < 4; i += 2)
+            //for (size_t i = 0; i < 4; i += 2)
+            //{
+            //    auto box2 = makeRect(2, 0.199, 0.199, { 0.1 - i * 0.2, -0.3 });
+            //        bodies[box2]->CO = 0.99;
+            //    makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
+            //}
+            for (size_t i = 0; i < 4; i ++)
             {
-                auto box2 = makeRect(2, 0.2, 0.2, { 0.1 - i * 0.2, -0.3 });
-                makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
-            }
-            for (size_t i = 1; i < 4; i += 2)
-            {
-                auto box2 = makeCircle(2, 0.1, { 0.1 - i * 0.2, -0.3 });
+                auto box2 = makeCircle(2, 0.099, { 0.1 - i * 0.2, -0.3 });
+                    bodies[box2]->CO = 0.99;
                 makeRevoluteJoint(staticBodies[ground], bodies[box2], { 0.1 - i * 0.2, 0.8 });
             }
         }

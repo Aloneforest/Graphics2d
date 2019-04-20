@@ -53,6 +53,7 @@ namespace lib2d
         v2 F;                       //受力
         v2 Fa;                      //受力（合力）
         double M{ 0 };              //力矩
+        double CO{ 0.1 };           // 弹性碰撞系数
         AABB aabb;                                  //外包矩阵
         std::vector<v2> vertices;                   //多边形顶点（本地坐标）
         std::vector<v2> verticesWorld;              //多边形顶点（世界坐标）

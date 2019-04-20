@@ -201,7 +201,7 @@ namespace lib2d
         break;
         case ADD_GRAVITY:                                               // 添加重力
         {
-            F += world2d::gravity * mass.value * world2d::dt;
+            F += world2d::gravity * mass.value;
             Fa += F;
         }
         break;
@@ -338,7 +338,7 @@ namespace lib2d
         break;
         case ADD_GRAVITY:                                               // 添加重力
         {
-            F += world2d::gravity * mass.value * world2d::dt;
+            F += world2d::gravity * mass.value;
             Fa += F;
         }
         break;
