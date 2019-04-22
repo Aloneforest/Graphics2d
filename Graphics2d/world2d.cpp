@@ -74,6 +74,14 @@ namespace lib2d
 
         helper->clear();
 
+        if (gravity.y != 0)
+        {
+            for (int i = 0; i < bodies.size(); i++)
+            {
+                bodies[i]->isSleep = false;
+            }
+        }
+
         collisionCalc::collisionDetection(helper->getWorld());  //构造碰撞结构
 
         //碰撞预处理
@@ -115,18 +123,21 @@ namespace lib2d
             body->update(ADD_GRAVITY);
             body->update(CALC_VELOCITY_AND_ANGULAR_VELOCITY);
             body->update(CALC_DISPLACEMENT_AND_ANGLE);
+            body->update(DETERMINE_DORMANCY);
         }
+
+        collisionCalc::collisionRemoveSleep(helper->getWorld());
 
         //绘制刚体
         for (auto &body : bodies)
         {
-            body->draw(helper);
+            body->draw(helper, YELLOW);
         }
 
         //绘制静态刚体
         for (auto &body : staticBodies)
         {
-            body->draw(helper);
+            body->draw(helper, WHITE);
         }
 
         //绘制碰撞情况
@@ -164,10 +175,10 @@ namespace lib2d
 
     void world2d::makeBound()
     {
-        makeRect(inf, 10, 0.1, { 0, 1.05 }, true);
-        makeRect(inf, 10, 0.1, { 0, -1.05 }, true);
-        makeRect(inf, 0.1, 10, { 1.05, 0 }, true);
-        makeRect(inf, 0.1, 10, { -1.05, 0 }, true);
+        makeRect(inf, 10, 0.02, { 0, 0.9 }, true);
+        makeRect(inf, 10, 0.02, { 0, -0.97 }, true);
+        makeRect(inf, 0.02, 10, { 0.97, 0 }, true);
+        makeRect(inf, 0.02, 10, { -0.97, 0 }, true);
     }
 
     void world2d::init()
@@ -272,6 +283,7 @@ namespace lib2d
         auto body = findBody(pt);
         if (body)
         {
+            body->isSleep = false;
             body->drag(pt, offset);
         }
     }

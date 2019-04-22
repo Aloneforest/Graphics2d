@@ -31,12 +31,14 @@ namespace lib2d
         virtual v2 max() const = 0;
 
         virtual void update(int) = 0;                               //更新状态
-        virtual void draw(Helper2d * helper) = 0;                   //画图
+        virtual void draw(Helper2d * helper, int color) = 0;                   //画图
 
         virtual v2 edge(const size_t idx) const = 0;
 
         v2 rotate(const v2 &v) const;                               //返回向量v经过angle角度旋转后的向量
         v2 world() const;                                           //返回刚体重心世界坐标
+
+        bool isSleep{ false };
 
         bool isStatic{ false };
         int collNum{ 0 };           //碰撞次数
@@ -83,7 +85,7 @@ namespace lib2d
         v2 max() const override;
 
         void update(int n) override;
-        void draw(Helper2d * helper) override;
+        void draw(Helper2d * helper, int color) override;
 
         v2 edge(const size_t idx) const override;                        //向量|idx+1, idx|
 
@@ -108,7 +110,7 @@ namespace lib2d
         v2 max() const override;
 
         void update(int n) override;
-        void draw(Helper2d * helper) override;
+        void draw(Helper2d * helper, int color) override;
 
         v2 edge(const size_t idx) const override;                        //向量|idx+1, idx|
 

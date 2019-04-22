@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include "const2d.h"
 #include "Helper2d.h"
 
 QSizeF Helper2d::mid;
@@ -47,20 +48,42 @@ void Helper2d::paintLine(lib2d::v2 a, lib2d::v2 b, const QPen drag)
 	painter->drawLine(QLineF(pointA, pointB));
 }
 
-void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v)
+void Helper2d::paintPolygon(const std::vector<lib2d::v2> &v, int color)
 {
 	static std::vector<QPointF> vp;
 	vp.clear();
 	vp.resize(v.size());
 	std::transform(v.begin(), v.end(), vp.begin(), world2screen);	//第四个参数需要声明为静态函数
-	painter->setPen(dragYellow);
+    switch (color)
+    {
+    case lib2d::YELLOW:
+        painter->setPen(dragYellow);
+        break;
+    case lib2d::RED:
+        painter->setPen(dragRed);
+        break;
+    case lib2d::WHITE:
+        painter->setPen(dragWhite);
+        break;
+    }
 	painter->drawPolygon(vp.data(), (int)vp.size());
 }
 
-void Helper2d::paintCircle(lib2d::v2 v, double r)
+void Helper2d::paintCircle(lib2d::v2 v, double r, int color)
 {
     auto R = world2screen(lib2d::v2(r, 0)).x() - world2screen(lib2d::v2()).x();//半径在世界坐标的投影长度
-    painter->setPen(dragYellow);
+    switch (color)
+    {
+    case lib2d::YELLOW:
+        painter->setPen(dragYellow);
+        break;
+    case lib2d::RED:
+        painter->setPen(dragRed);
+        break;
+    case lib2d::WHITE:
+        painter->setPen(dragWhite);
+        break;
+    }
     painter->drawEllipse(world2screen(v), R, R);
 }
 
@@ -117,7 +140,7 @@ void Helper2d::exec(QString & str)
     else if(str[0] == 'g')
     {
         if(lib2d::world2d::gravity.y == 0)
-            lib2d::world2d::gravity = { 0, -5 };
+            lib2d::world2d::gravity = { 0, -0.5 };
         else
             lib2d::world2d::gravity = { 0, 0 };
     }

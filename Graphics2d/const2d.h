@@ -12,13 +12,21 @@ namespace lib2d
         CALC_VELOCITY_AND_ANGULAR_VELOCITY,     //计算速度和角速度
         CALC_DISPLACEMENT_AND_ANGLE,            //计算位移和角度
         ADD_GRAVITY,                            //添加重力
-        RESET_NET_FORCE                         //重设合外力
+        RESET_NET_FORCE,                        //重设合外力
+        DETERMINE_DORMANCY                      //当合外力和速度为零时，判定休眠
     };
 
     enum body2dType
     {
         POLYGON,                                    //多边形
         CIRCLE                                      //圆
+    };
+
+    enum color 
+    {
+        YELLOW,
+        RED,
+        WHITE
     };
 }
 

@@ -222,6 +222,8 @@ namespace lib2d
                 world.collisions.insert(std::make_pair(id, coll));
                 bodyA->collNum++;
                 bodyB->collNum++;
+                bodyA->isSleep = false;
+                bodyB->isSleep = false;
             }
         }
         else                                    //¸üÐÂ
@@ -319,13 +321,22 @@ namespace lib2d
         }
     }
 
+    void collisionCalc::collisionRemoveSleep(world2d &world) {
+        erase_if(world.collisions, [&](auto &c) {
+            if (c.second.bodyA->isStatic)
+                return c.second.bodyB->isSleep;
+            if (c.second.bodyB->isStatic)
+                return c.second.bodyA->isSleep;
+            return c.second.bodyA->isSleep && c.second.bodyB->isSleep;
+        });
+    }
+
     void collisionCalc::drawCollision(Helper2d * helper, const collision & coll)
     {
         const auto typeA = coll.bodyA->type();
         const auto typeB = coll.bodyB->type();
         auto showA = false;
         auto showB = false;
-        if (POLYGON == typeA)
         {
             showA = true;
             auto bodyA = coll.bodyA;// std::dynamic_pointer_cast<polygon2d>(coll.bodyA);
@@ -333,7 +344,6 @@ namespace lib2d
             auto ptA2 = bodyA->verticesWorld[(coll.idxA + 1) % bodyA->verticesWorld.size()];
             helper->paintLine(ptA1, ptA2, helper->dragRed);
         }
-        if (POLYGON == typeB)
         {
             showB = true;
             auto bodyB = coll.bodyB;//std::dynamic_pointer_cast<polygon2d>(coll.bodyB);

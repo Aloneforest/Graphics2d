@@ -172,6 +172,9 @@ namespace lib2d
 
     void polygon2d::update(int n)
     {
+        if (isStatic) return;
+        if (isSleep) return;
+
         switch (n)
         {
         case INIT_FORCE_AND_TORQUE:                                     // 初始化力和力矩
@@ -210,14 +213,27 @@ namespace lib2d
             Fa.x = Fa.y = 0;
         }
         break;
+        case DETERMINE_DORMANCY:                                                         // 当合外力和速度为零时，判定休眠
+        {
+            if (Fa.zero(1e-4) && V.zero(1e-4) && std::abs(angleV) < 1e-4) {
+                V.x = 0;
+                V.y = 0;
+                angleV = 0;
+                update(INIT_FORCE_AND_TORQUE);
+                update(RESET_NET_FORCE);
+                collNum = 0;
+                isSleep = true;
+            }
+        }
+        break;
         default:
             break;
         }
     }
 
-    void polygon2d::draw(Helper2d * helper)
+    void polygon2d::draw(Helper2d * helper, int color)
     {
-        helper->paintPolygon(verticesWorld);
+        helper->paintPolygon(verticesWorld, color);
 
         auto p = pos + center;
 
@@ -309,6 +325,9 @@ namespace lib2d
 
     void circle2d::update(int n)
     {
+        if (isStatic) return;
+        if (isSleep) return;
+
         switch (n)
         {
         case INIT_FORCE_AND_TORQUE:                                     // 初始化力和力矩
@@ -347,15 +366,27 @@ namespace lib2d
             Fa.x = Fa.y = 0;
         }
         break;
+        case DETERMINE_DORMANCY:                                        // 当合外力和速度为零时，判定休眠
+        {
+            if (Fa.zero(1e-4) && V.zero(1e-4) && std::abs(angleV) < 1e-4) {
+                V.x = 0;
+                V.y = 0;
+                angleV = 0;
+                update(INIT_FORCE_AND_TORQUE);
+                update(RESET_NET_FORCE);
+                collNum = 0;
+                isSleep = true;
+            }
+        }
+        break;
         default:
             break;
         }
     }
 
-    void circle2d::draw(Helper2d * helper)
+    void circle2d::draw(Helper2d * helper, int color)
     {
-        helper->paintPolygon(verticesWorld);
-        helper->paintCircle(pos, r);
+        helper->paintCircle(pos, r, color);
 
         auto p = pos + center;
 

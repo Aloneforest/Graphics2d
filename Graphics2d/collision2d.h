@@ -66,7 +66,17 @@ namespace lib2d
         static void collisionPrepare(collision & coll);                                                                             //碰撞计算准备，计算相关系数
         static void collisionStateUpdate(collision & coll);                                                                         //更新物体碰撞后的状态
 
+        static void collisionRemoveSleep(world2d &world);
+
         static void drawCollision(Helper2d * helper, const collision & coll);                                                       //绘制碰撞
+    };
+
+    template<typename ContainerT, typename PredicateT>
+    void erase_if(ContainerT &items, const PredicateT &predicate) {
+        for (auto it = items.begin(); it != items.end();) {
+            if (predicate(*it)) it = items.erase(it);
+            else ++it;
+        }
     };
 }
 
