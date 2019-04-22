@@ -144,7 +144,7 @@ namespace lib2d
 
         auto va = bodyA->verticesWorld[coll.idxA % bodyASize];
 
-        //弹性碰撞
+        //弹性系数计算
         auto &pos0 = contacts[0].pos;
         auto &pos1 = contacts[1].pos;
         const auto CO = bodyA->CO * bodyB->CO;
@@ -228,7 +228,7 @@ namespace lib2d
         {
             if (solveCollition(coll))
             {
-                collisionUpdate(coll, world.collisions[id]);
+                //collisionUpdate(coll, world.collisions[id]);
                 world.collisions[id] = coll;
             }
             else
@@ -279,7 +279,7 @@ namespace lib2d
             auto kt = a.mass.inv + b.mass.inv + std::abs(a.inertia.inv) * tA * tA + std::abs(b.inertia.inv) * tB * tB;
             contact.massTangent = kt > 0 ? 1.0 / kt : 0.0;
 
-            contact.bias = -kBiasFactor * world2d::dtInv * std::min(0.0, contact.sep);      //修正碰撞物体相交距离
+            contact.bias = -kBiasFactor * world2d::dtInv * std::min(0.0, contact.sep);      //补偿碰撞物体速度 = 补偿系数 * 单位时间 * 碰撞物体相交距离
         }
     }
 

@@ -197,13 +197,15 @@ namespace lib2d
                 { -0.2, 0.2 }
             };
             auto p1 = makePolygon(2, vertices1, { -0.2, 0 });
+            //bodies[p1]->CO = 0.55;
             //p1->V = v2(0.2, 0);
             //p1->angleV = 0.8;
-            auto p2 = makePolygon(2, vertices2, { 0.2, 0 });
+            auto p2 = makePolygon(2, vertices2, { 0.21, 0 });
+            //bodies[p2]->CO = 0.55;
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
             auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
-            auto p4 = makeCircle(2, 0.1, { 0.5, 0.7 });
+            auto p4 = makeCircle(2, 0.1, { 0.5, 0.71 });
         }
             break;
         case 2:
