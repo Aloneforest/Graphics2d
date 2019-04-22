@@ -162,6 +162,7 @@ namespace lib2d
         auto h = helper->getSize().height();
         
         helper->paintText({ 10, 20 }, QString().sprintf("num: %d", collisions.size()));
+        helper->paintText({ (double)w-100, 20 }, QString().sprintf("FPS: %.0lf", 1/dt));
     }
 
     void world2d::clear()
@@ -175,10 +176,10 @@ namespace lib2d
 
     void world2d::makeBound()
     {
-        makeRect(inf, 10, 0.02, { 0, 0.9 }, true);
-        makeRect(inf, 10, 0.02, { 0, -0.97 }, true);
-        makeRect(inf, 0.02, 10, { 0.97, 0 }, true);
-        makeRect(inf, 0.02, 10, { -0.97, 0 }, true);
+        makeRect(inf, 2, 0.02, { 0, 0.9 }, true);
+        makeRect(inf, 2, 0.02, { 0, -0.97 }, true);
+        makeRect(inf, 0.02, 1.95, { 0.97, -0.05 }, true);
+        makeRect(inf, 0.02, 1.95, { -0.97, -0.05 }, true);
     }
 
     void world2d::init()
