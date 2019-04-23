@@ -215,7 +215,7 @@ namespace lib2d
         break;
         case DETERMINE_DORMANCY:                                                         // 当合外力和速度为零时，判定休眠
         {
-            if (Fa.zero(1e-4) && V.zero(1e-4) && std::abs(angleV) < 1e-4) {
+            if (Fa.zero(1e-2) && V.zero(1e-2) && std::abs(angleV) < 1e-2) {
                 V.x = 0;
                 V.y = 0;
                 angleV = 0;
@@ -368,7 +368,7 @@ namespace lib2d
         break;
         case DETERMINE_DORMANCY:                                        // 当合外力和速度为零时，判定休眠
         {
-            if (Fa.zero(1e-4) && V.zero(1e-4) && std::abs(angleV) < 1e-4) {
+            if (Fa.zero(1e-2) && V.zero(1e-2) && std::abs(angleV) < 1e-2) {
                 V.x = 0;
                 V.y = 0;
                 angleV = 0;

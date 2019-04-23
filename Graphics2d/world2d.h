@@ -34,6 +34,7 @@ namespace lib2d
         void motion(const v2 & pt);                      // Û±Í“∆∂Ø ∏¡ø
 
         void setHelper(Helper2d * helper);
+        void enableGravity();
 
     public:
         static QTime lastClock;
@@ -55,6 +56,7 @@ namespace lib2d
         std::unordered_map<uint32_t, collision> collisions;     //hashmap
 
         uint16_t globalId = 1;
+        int sleepNum = 0;
     };
 }
 
