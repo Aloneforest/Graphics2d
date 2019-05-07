@@ -71,6 +71,13 @@ namespace lib2d
         static void drawCollision(Helper2d * helper, const collision & coll);                                                       //»æÖÆÅö×²
     };
 
+    template<typename ContainerT, typename PredicateT>
+    void erase_if(ContainerT &items, const PredicateT &predicate) {
+        for (auto it = items.begin(); it != items.end();) {
+            if (predicate(*it)) it = items.erase(it);
+            else ++it;
+        }
+    };
 }
 
 #endif //GRAPHICS2D_COLLISION2D_H
