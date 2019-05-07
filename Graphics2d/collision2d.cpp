@@ -296,7 +296,6 @@ namespace lib2d
             auto dv = (b.V + (-b.angleV * contact.rb.N())) - (a.V + (-a.angleV * contact.ra.N()));  //接触相对速度=（B物体平移速度+B物体线速度）-（A物体平移速度+A物体线速度）
 
             auto vn = dv.dot(coll.N);                                                       //法线方向速度分量
-            //auto dpn = (-vn) * contact.massNormal;                                          //缺省位置修正
             auto dpn = (-vn + contact.bias) * contact.massNormal;                           //法向冲量增量
             if (contact.pn + dpn < 0)
             {

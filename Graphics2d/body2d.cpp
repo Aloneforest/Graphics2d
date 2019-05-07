@@ -92,7 +92,7 @@ namespace lib2d
             return false;
 
         int i = 2, j = size - 1;
-        int line = 2;
+        int line = -1;
 
         while (i <= j)
         {
