@@ -78,9 +78,9 @@ namespace lib2d
         collisionCalc::collisionDetection(helper->getWorld());  //构造碰撞结构
 
         //碰撞预处理
-        for (auto & col : collisions)
+        for (auto & coll : collisions)
         {
-            collisionCalc::collisionPrepare(col.second);        //计算碰撞相关系数
+            collisionCalc::collisionPrepare(coll.second);        //计算碰撞相关系数
         }
 
         //关节预处理
@@ -155,7 +155,7 @@ namespace lib2d
 
         auto w = helper->getSize().width();
         auto h = helper->getSize().height();
-        
+  
         helper->paintText({ 10, 20 }, QString().sprintf("collnum: %d, sleepnum: %d", collisions.size(), sleepNum));
         helper->paintText({ (double)w - 100, 20 }, QString().sprintf("FPS: %.0lf", 1 / dt));
     }
@@ -211,14 +211,15 @@ namespace lib2d
             //bodies[p2]->CO = 0.55;
             //p2->V = v2(-0.2, 0);
             //p2->angleV = -0.8;
-            auto p3 = makeCircle(2, 0.1, { 0.5, 0.5 });
-            auto p4 = makeCircle(2, 0.1, { 0.5, 0.71 });
+            auto p3 = makeCircle(2, 0.1, { 0.2, 0.32 });
+            //auto p4 = makeCircle(2, 0.1, { 0.5, 0.71 });
             //bodies[p3]->CO = 0.99;
             //bodies[p4]->CO = 0.99;
         }
             break;
         case 2:
         {
+            gravity = { 0, -0.5 };
             auto ground = makeRect(inf, 1.5, 0.01, { 0, -0.9 }, true);
             auto box1 = makeCircle(2, 0.099, { 1.4, 0.8 });
             bodies[box1]->CO = 0.99;
@@ -239,6 +240,7 @@ namespace lib2d
             break;
         case 3:
         {
+            gravity = { 0, -0.5 };
             auto ground = makeRect(inf, 0.2, 0.2, { -0.3,-0.3 }, true);
             const double mass = 10.0;
             auto last = ground;
@@ -254,6 +256,7 @@ namespace lib2d
             break;
         case 4:
         {
+            gravity = { 0, -0.5 };
             makeBound();
             v2 x{ -0.45, -0.45 };
             v2 y;
@@ -270,6 +273,7 @@ namespace lib2d
             break;
         case 5:
         {
+            gravity = { 0, -0.5 };
             makeBound();
             v2 x{ -0.45, -0.45 };
             v2 y;
@@ -304,6 +308,20 @@ namespace lib2d
                 }
                 x += {0.051, 0.11};
             }
+        }
+        break;
+        case 6:
+        {
+            gravity = { 0, 0 };
+            makeBound();
+            auto p1 = makeCircle(2, 0.1, { 0.15, 0.2 });
+            auto p2 = makeCircle(2, 0.1, { -0.15, 0.2 });
+            bodies[p2]->V = v2(0.2, 0);
+            auto p3 = makeCircle(2, 0.1, { 0.15, -0.2 });
+            bodies[p3]->CO = 0.99;
+            auto p4 = makeCircle(2, 0.1, { -0.15, -0.2 });
+            bodies[p4]->V = v2(0.2, 0);
+            bodies[p4]->CO = 0.99;
         }
         break;
         default:
