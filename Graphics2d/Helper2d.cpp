@@ -137,10 +137,13 @@ void Helper2d::exec(QString & str)
         auto key = str.toInt();
         world.scene(key);
     }
-    else if(str[0] == 'g')
+    else if (str[0] == 'g')
     {
-        if(lib2d::world2d::gravity.y == 0)
+        if (lib2d::world2d::gravity.y == 0)
+        {
             lib2d::world2d::gravity = { 0, -0.5 };
+            world.enableGravity();
+        }
         else
             lib2d::world2d::gravity = { 0, 0 };
     }
